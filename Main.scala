@@ -12,6 +12,12 @@ import scalafx.event.ActionEvent
 import scalafx.util.Duration
 
 import scalafx.Includes._
+import scalafx.animation.KeyFrame
+
+case class GameObject(name:String, value: Int = (Math.random() * 10).toInt)
+object GameState{
+  var objects: List[GameObject] = List[GameObject]()
+}
 
 object MyScalaFXProject extends JFXApp3 {
   override def start(): Unit = {
@@ -19,13 +25,18 @@ object MyScalaFXProject extends JFXApp3 {
     val gc = canvas.graphicsContext2D
     
     //Draw Green Triangle to canvas
-    gc.setFill(Color.GREEN)
     val xPoints = Array[Double](100, 200, 100)
     val yPoints= Array[Double](100, 200, 200)
-    gc.fillPolygon(xPoints, yPoints, 3)
-    
+
+    GameState.objects = GameState.objects.appendedAll(List(
+      GameObject("One"),
+      GameObject("Two"),
+      GameObject("Three"),
+      GameObject("Four"),
+      GameObject("Five"),
+    ))
     // Initial text rendering
-    renderText(gc, "Initial Value")    
+    renderText(gc, GameState.objects)    
     
     val buttons = new BorderPane {
       styleClass += "button-panel"
@@ -46,11 +57,34 @@ object MyScalaFXProject extends JFXApp3 {
         }
       }
     }
+
+    
+    val timeline = new Timeline {
+      cycleCount = Timeline.Indefinite
+      keyFrames = KeyFrame(Duration(1000), onFinished = (e: ActionEvent) => {
+        // Clear the canvas
+        gc.clearRect(0, 0, canvas.getWidth, canvas.getHeight)
+        
+        // Get the updated list of game objects (replace with actual logic for updating/fetching game objects)
+        val updatedGameObjects = GameState.objects 
+        
+        // Redraw the triangle if needed
+        gc.setFill(Color.Green)
+        gc.fillPolygon(xPoints, yPoints, 3)
+        
+        // Render the updated game objects
+        renderText(gc, updatedGameObjects)
+      })
+    }
+    timeline.play()
     
   }
-  def renderText(gc: GraphicsContext, text: String): Unit = {
-    gc.setFill(Color.BLACK) // Set text color
-    gc.fillText(text, 150, 160) // Adjust coordinates as needed
+  def renderText(gc: GraphicsContext, objects: List[GameObject]): Unit = {
+    gc.setFill(Color.Black) 
+    objects.zipWithIndex.foreach{case (obj, index) =>
+      // Adjust coordinates as needed. You may want to use the index to offset the Y position of each object
+      gc.fillText(obj.toString, 10, 20 * (index + 1)) 
+    }
   }
   
 }
