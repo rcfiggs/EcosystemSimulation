@@ -27,14 +27,8 @@ object MyScalaFXProject extends JFXApp3 {
     //Draw Green Triangle to canvas
     val xPoints = Array[Double](100, 200, 100)
     val yPoints= Array[Double](100, 200, 200)
-
-    GameState.objects = GameState.objects.appendedAll(List(
-      GameObject("One"),
-      GameObject("Two"),
-      GameObject("Three"),
-      GameObject("Four"),
-      GameObject("Five"),
-    ))
+    
+    GameState.objects = GameState.objects.appendedAll((0 to 20).map((i: Int) => GameObject(i.toString)))
     // Initial text rendering
     renderText(gc, GameState.objects)    
     
@@ -57,7 +51,7 @@ object MyScalaFXProject extends JFXApp3 {
         }
       }
     }
-
+    
     
     val timeline = new Timeline {
       cycleCount = Timeline.Indefinite
@@ -81,9 +75,22 @@ object MyScalaFXProject extends JFXApp3 {
   }
   def renderText(gc: GraphicsContext, objects: List[GameObject]): Unit = {
     gc.setFill(Color.Black) 
-    objects.zipWithIndex.foreach{case (obj, index) =>
-      // Adjust coordinates as needed. You may want to use the index to offset the Y position of each object
-      gc.fillText(obj.toString, 10, 20 * (index + 1)) 
+    gc.setStroke(Color.Blue) // Color for box outline
+    
+    val boxWidth = 100 
+    val boxHeight = 30
+    val maxItemsPerColumn = 5
+    val columnSpacing = 20
+    
+    objects.zipWithIndex.foreach{ case (obj, index) =>
+      val x = 10 + (index % maxItemsPerColumn) * (boxWidth + columnSpacing)
+      val y = 20 + (index / maxItemsPerColumn) * boxHeight
+      
+      // Draw the box
+      gc.strokeRect(x, y, boxWidth, boxHeight)
+      
+      // Draw the text within the box (adjust offsets as needed)
+      gc.fillText(obj.toString, x + 5, y + 20) 
     }
   }
   
