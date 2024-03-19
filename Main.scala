@@ -52,7 +52,7 @@ class GameCanvas(width: Double, height: Double) extends Canvas(width, height) {
   }
 }
 
-class GameUI extends JFXApp3 {
+object GameUI extends JFXApp3 {
   override def start(): Unit = {
     val gameCanvas = new GameCanvas(600, 400)
     GameState.objects = GameState.objects.appendedAll((0 to 20).map((i: Int) => GameObject(i.toString)))
