@@ -1,5 +1,5 @@
 import scalafx.Includes._
-import scala.jdk.CollectionConverters
+import scala.jdk.CollectionConverters._
 import scalafx.application.JFXApp3
 import scalafx.application.JFXApp3.PrimaryStage
 import scalafx.scene.Scene
