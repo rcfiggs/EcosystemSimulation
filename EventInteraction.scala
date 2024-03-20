@@ -8,15 +8,32 @@ import scalafx.animation.AnimationTimer
 import scala.util.Random
 import scala.collection.mutable
 
-case class Organism(name: String, age: Int) extends Entity {
-  override def update(): Seq[Event] = Seq[Event]
-  override def process(time: Int): Seq[Event] = Seq[Event]
+case class Organism(id: Long = Entities.newId, name: String, var age: Int) extends Entity {
+  override def update(): Seq[Event] = Seq[Event]()
+  override def process(time: Int): Seq[Event] = {
+    age += 1
+    if (age % 100 == 0){
+      Seq[Event](UpdateOrganismDisplay(this))
+    } else {
+      Seq[Event]()
+    }
+    
+  }
+
+  def display: String = s"$name: $age"
 }
 
 object Entities {
   val organismDisplay = 1
   val endDayButton = 2
   val thingList = 3
+  var nextId: Long = 4
+    // Generate a unique ID
+  def newId: Long = {
+    val id = nextId
+    nextId += 1
+    id
+  }
 }
 
 // Define the Event trait
@@ -26,8 +43,8 @@ trait Event {
 
 // Define the Entity trait
 trait Entity {
-  val id: Int
-  val events: mutable.Queue[Event]
+  val id: Long
+  val events: mutable.Queue[Event] = mutable.Queue[Event]()
 
   def update(): Seq[Event]
   def process(time: Int): Seq[Event]
@@ -36,18 +53,12 @@ trait Entity {
 // Define the GameState class
 class GameState {
   val entities: mutable.Map[Long, Entity] = mutable.Map()
-  var nextId: Long = 1
 
-  // Generate a unique ID
-  def newId(): Long = {
-    val id = nextId
-    nextId += 1
-    id
+  def addEntity(entity: Entity): Unit = {
+    entities.addOne(entity.id, entity)
   }
 
-  def addEntity(id: Long, entity: Entity): Unit = {
-    entities.addOne(id, entity)
-  }
+  def getEntity(id: Long): Entity = entities(id)
 
   // Process a frame
   def processFrame(time: Int): Unit = {
@@ -60,47 +71,50 @@ class GameState {
       val processEvents = entity.process(time)
       processEvents.foreach(e => entities(e.targetId).events.enqueue(e))
     }
-
-    // 3. Process all outputed events
-    // for (entity <- entities.values) {
-    //   while (entity.events.nonEmpty) {
-    //     val event = entity.events.dequeue()
-    //     // Process the event here
-    //   }
-    // }
   }
 }
 
- case class UpdateOrganismDisplay(organism: Organism) extends  Event
+ case class UpdateOrganismDisplay(organism: Organism) extends Event{
+  override val targetId = Entities.organismDisplay
+ }
 
-class OrganismDisplay(dataList: ObservableBuffer[String], listView: Listview[String]) extends Entity {
+class OrganismDisplay(dataList: ObservableBuffer[String], listView: ListView[String]) extends Entity {
+  override val id = Entities.organismDisplay
   val organismMap: mutable.Map[Long, Int] = mutable.Map[Long,Int]()
   override def update(): Seq[Event] = {
     while(events.nonEmpty){
       events.dequeue() match {
-        case organism: UpdateOrganismDisplay => {
-          if(!organismMap.contains(organism.id)){
-            organismMap.add(organism.id, dataList.size)
+        case event: UpdateOrganismDisplay => {
+          val organism: Organism = event.organism
+          if(organismMap.contains(organism.id)){
+            dataList.update(organismMap(organism.id), organism.display) // replace name with data to be displayed
+          } else {
+            organismMap(organism.id) = dataList.size
+            dataList.add(organism.display)
           }
-          dataList.update(organismMap(event.organismId), organism.name) // replace name with data to be displayed
         }
         case _ => ???
       }
     }
+    Seq[Event]()
   }
 
   override def process(time: Int): Seq[Event] = {
-    Seq[Event]
+    Seq[Event]()
   }
 
 }
 
 object SimpleApp extends JFXApp3 {
   val gameState: GameState = new GameState()
+
   override def start(): Unit = {
     val dataList = ObservableBuffer[String]()
     val listView = new ListView[String](dataList)
-    gameState.addEntity(Entities.organismDisplay, OrganismDisplay(dataList, listView))
+    gameState.addEntity(OrganismDisplay(dataList, listView))
+    val first: Organism = Organism(name = "first!", age = 0)
+    gameState.addEntity(first)
+    gameState.getEntity(Entities.organismDisplay).events.enqueue(UpdateOrganismDisplay(first))
 
     
     val vbox = new VBox(10) {
@@ -112,13 +126,7 @@ object SimpleApp extends JFXApp3 {
     }
     
     AnimationTimer((now: Long) => {
-      // Update the data list
-      val updatedList = list.updated(0, Random.nextInt)
-      val diff = updatedList.zip(list).collect { case (newItem, oldItem) if newItem != oldItem => (newItem, oldItem) }
-      diff.foreach { case (newItem, oldItem) =>
-        dataList.update(dataList.indexOf(oldItem.toString), newItem.toString)
-      }
-      list = updatedList
+      gameState.processFrame(0)
     }).start()
   }
 }
