@@ -6,11 +6,11 @@ import scalafx.scene.Scene
 import scalafx.scene.control.{Button, ListView}
 import scalafx.event.ActionEvent
 
-// case class MyObject(name: String, var value: Int) {
-//   def incrementValue(): Unit = {
-//     value += 1
-//   }
-// }
+case class MyObject(name: String, var value: Int) {
+  def incrementValue(): Unit = {
+    value += 1
+  }
+}
 
 object MyApp extends JFXApp3 {
   override def start(): Unit = {
