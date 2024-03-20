@@ -4,6 +4,7 @@ import scalafx.application.JFXApp3
 import scalafx.application.JFXApp3.PrimaryStage
 import scalafx.scene.Scene
 import scalafx.scene.control.{Button, ListView}
+import scalafx.event.ActionEvent
 
 case class MyObject(name: String, var value: Int) {
   def incrementValue(): Unit = {
@@ -22,10 +23,18 @@ object MyApp extends JFXApp3 {
       if (selectedIndex != -1) {
         myObjects(selectedIndex).incrementValue()
         listView.getItems().set(selectedIndex, s"${myObjects(selectedIndex).name}: ${myObjects(selectedIndex).value}")
+        println(s"${myObjects(selectedIndex).name}: ${myObjects(selectedIndex).value}")
       }
     }
 
-    val scene = new Scene(listView, 300, 200)
+    val nextDayButton = new Button("Next Day")
+    nextDayButton.onAction = (_: ActionEvent) => {
+      myObjects.foreach(_.incrementValue())
+      listView.getItems().clear()
+      listView.getItems().addAll(myObjects.map(obj => s"${obj.name}: ${obj.value}").asJava)
+    }
+
+    val scene = new Scene(new javafx.scene.layout.VBox(listView, nextDayButton), 300, 200)
 
     stage = new PrimaryStage()
     stage.scene = scene
