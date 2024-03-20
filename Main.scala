@@ -1,87 +1,49 @@
-import scalafx.Includes._
-import scala.jdk.CollectionConverters._
 import scalafx.application.JFXApp3
-import scalafx.application.JFXApp3.PrimaryStage
+import scalafx.application.Platform
+import scalafx.geometry.Insets
 import scalafx.scene.Scene
-import scalafx.scene.control.{Button, ListView}
-import scalafx.event.ActionEvent
-import scala.compiletime.uninitialized
+import scalafx.scene.canvas.Canvas
+import scalafx.scene.canvas.GraphicsContext
+import scalafx.scene.paint.Color
+import scalafx.scene.shape.Arc
+import javafx.animation.AnimationTimer
+import scalafx.scene.layout.VBox
 
-case class MyObject(name: String, var value: Int) {
-  def incrementValue(): Unit = {
-    value += 1
-  }
-}
+class BallBounceApp extends JFXApp3 {
+  var x = 0.0
+  var y = 0.0
+  var dx = 0.1
+  var dy = 0.1
 
-// GameState.scala
-class GameState {
-  private var myObjects: List[MyObject] = List(MyObject("Item 1", 1), MyObject("Item 2", 2), MyObject("Item 3", 3), MyObject("Item 4", 4), MyObject("Item 5", 5))
+  val ballRadius = 20.0
 
-  def incrementValues(): Unit = {
-    println("inc")
-    println(myObjects)
-    myObjects.foreach(_.incrementValue())
-  }
+  val canvas = new Canvas(800, 600)
+  val gc = canvas.graphicsContext2D
 
-  def getObjectValues(): List[String] = {
-    myObjects.map(obj => s"${obj.name}: ${obj.value}")
-  }
-}
-
-// GameView.scala
-class GameView(game: Game) {
-  val listView = new ListView[String]()
-  val nextDayButton = new Button("Next Day")
-
-  nextDayButton.onAction = (_: ActionEvent) => {
-    game.handleNextDay()
+  stage = new JFXApp3.PrimaryStage {
+    scene = Scene(VBox(canvas))
   }
 
-  def start(): Scene = {
-    val scene = new Scene(new javafx.scene.layout.VBox(listView, nextDayButton), 300, 200)
-    update()
-    scene
-  }
+  new AnimationTimer {
+    override def handle(now: Long): Unit = {
+      // Clear the canvas
+      gc.clearRect(0, 0, canvas.width.value, canvas.height.value)
 
-  def update(): Unit = {
-    listView.getItems().clear()
-    listView.getItems().addAll(game.getObjectValues().asJava)
-  }
-}
+      // Draw the ball
+      gc.fill = Color.Red
+      gc.fillOval(x, y, ballRadius * 2, ballRadius * 2)
 
-// GameController.scala
-class GameController(game: Game, view: GameView) {
-  def handleNextDay(): Unit = {
-    game.incrementValues()
-    view.update()
-  }
-}
+      // Move the ball
+      x += dx
+      y += dy
 
-// Game.scala
-class Game {
-  private val state: GameState = new GameState()
-
-  def incrementValues(): Unit = {
-    state.incrementValues()
-  }
-
-  def getObjectValues(): List[String] = {
-    state.getObjectValues()
-  }
-
-  def handleNextDay(): Unit = {
-    incrementValues()
-  }
-}
-
-// Main.scala
-object Main extends JFXApp3 {
-  val game = new Game()
-  override def start(): Unit = {
-    val view = new GameView(game)
-    val controller = new GameController(game, view)
-    stage = new PrimaryStage()
-    stage.scene = view.start()
-    stage.show()
+      // Check for collision with the edge of the canvas
+      if (x < ballRadius || x > canvas.width.value - ballRadius) {
+        dx = -dx
+      }
+      if (y < ballRadius || y > canvas.height.value - ballRadius) {
+        dy = -dy
+      }
+    }
   }
 }
