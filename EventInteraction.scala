@@ -12,12 +12,8 @@ import scala.collection.mutable
 case class Organism(id: Long = Entities.newId, name: String, var age: Int) extends Entity {
   override def update(): Seq[Event] = Seq[Event]()
   override def process(time: Int): Seq[Event] = {
-    // age += 1
-    if (age % 10 == 0){
-      Seq[Event](UpdateOrganismDisplay(this))
-    } else {
-      Seq[Event]()
-    }
+    age += 1
+    Seq[Event](UpdateOrganismDisplay(this))
   }
 
   def display: String = s"$name: $age"
@@ -71,7 +67,7 @@ case class UpdateOrganismDisplay(organism: Organism) extends Event {
   override val targetId = Entities.organismDisplay
 }
 
-case class EndDay(organism: Organism) extends Event {
+case class ButtonPressed(organism: Organism) extends Event {
   override val targetId = Entities.endDayButton
 }
 
@@ -101,16 +97,30 @@ class OrganismDisplay(dataList: ObservableBuffer[String], listView: ListView[Str
   }
 }
 
-class EndDayButton(gameState: GameState) extends Entity {
+class EndDayButton(gameState: GameState, button: Button) extends Entity {
   override val id = Entities.endDayButton
-  override def update(): Seq[Event] = Seq[Event]()
-  override def process(time: Int): Seq[Event] = {
-    for (organism <- gameState.entities.values) {
-      if (organism.isInstanceOf[Organism]) {
-        gameState.getEntity(Entities.organismDisplay).events.enqueue(UpdateOrganismDisplay(organism.asInstanceOf[Organism]))
+  button.onAction = (_) => {
+    gameState.getEntity(Entities.organismDisplay).events.enqueue(ButtonPressed(null))
+  }
+
+  override def update(): Seq[Event] = {
+    while(events.nonEmpty){
+      events.dequeue() match {
+        case event: ButtonPressed => {
+          for (organism <- gameState.entities.values) {
+            if (organism.isInstanceOf[Organism]) {
+              gameState.getEntity(Entities.organismDisplay).events.enqueue(UpdateOrganismDisplay(organism.asInstanceOf[Organism]))
+            }
+          }
+        }
+        case _ => ???
       }
     }
-    Seq[Event](EndDay(null))
+    Seq[Event]()
+  }
+
+  override def process(time: Int): Seq[Event] = {
+    Seq[Event]()
   }
 }
 
@@ -124,14 +134,12 @@ object SimpleApp extends JFXApp3 {
     val first: Organism = Organism(name = "first!", age = 0)
     gameState.addEntity(first)
     gameState.getEntity(Entities.organismDisplay).events.enqueue(UpdateOrganismDisplay(first))
-    gameState.addEntity(EndDayButton(gameState))
+
+    val endDayButton = new Button("End Day")
+    gameState.addEntity(EndDayButton(gameState, endDayButton))
 
     val vbox = new VBox(10) {
-      children = Seq(listView, new Button("End Day") {
-        onAction = (_) => {
-          gameState.getEntity(Entities.endDayButton).process(0)
-        }
-      })
+      children = Seq(listView, endDayButton)
     }
 
     stage = new JFXApp3.PrimaryStage {
