@@ -10,11 +10,15 @@ import scala.util.Random
 import scala.collection.mutable
 
 case class Organism(id: Long = Entities.newId, name: String, var age: Int) extends Entity {
-  override def update(): Seq[Event] = Seq[Event]()
-  override def process(time: Int): Seq[Event] = {
-    age += 1
-    Seq[Event](UpdateOrganismDisplay(this))
+
+  override val eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case event: EndDay =>
+      this.age += 1
+      Seq(UpdateOrganismDisplay(this))
+    case _ => Seq[Event]()
   }
+
+  override def process(time: Int): Seq[Event] = Seq[Event]()
 
   def display: String = s"$name: $age"
 }
@@ -38,8 +42,11 @@ trait Event {
 trait Entity {
   val id: Long
   val events: mutable.Queue[Event] = mutable.Queue[Event]()
+  val eventHandlers: PartialFunction[Event, Seq[Event]]
 
-  def update(): Seq[Event]
+  def update(): Seq[Event] = {
+    events.dequeueAll(_ => true).flatMap(eventHandlers)
+  }
   def process(time: Int): Seq[Event]
 }
 
@@ -67,41 +74,41 @@ case class UpdateOrganismDisplay(organism: Organism) extends Event {
   override val targetId = Entities.organismDisplay
 }
 
-case class ButtonPressed(organism: Organism) extends Event {
-  override val targetId = Entities.endDayButton
+case class ButtonPressed(targetId: Long = Entities.endDayButton) extends Event
+
+case class EndDay(organism: Organism) extends Event {
+  override val targetId =  organism.id
 }
 
 class OrganismDisplay(dataList: ObservableBuffer[String], listView: ListView[String]) extends Entity {
   override val id = Entities.organismDisplay
   val organismMap: mutable.Map[Long, Int] = mutable.Map[Long,Int]()
-  override def update(): Seq[Event] = {
-    while(events.nonEmpty){
-      events.dequeue() match {
-        case event: UpdateOrganismDisplay => {
-          val organism: Organism = event.organism
-          if(organismMap.contains(organism.id)){
-            dataList.update(organismMap(organism.id), organism.display) // replace name with data to be displayed
-          } else {
-            organismMap(organism.id) = dataList.size
-            dataList.add(organism.display)
-          }
-        }
-        case _ => ???
+
+  override val eventHandlers = {
+    case event: UpdateOrganismDisplay =>
+      val organism: Organism = event.organism
+      if(organismMap.contains(organism.id)){
+        dataList.update(organismMap(organism.id), organism.display) // replace name with data to be displayed
+      } else {
+        organismMap(organism.id) = dataList.size
+        dataList.add(organism.display)
       }
-    }
-    Seq[Event]()
+      Seq[Event]() // return an empty sequence of events
+    case _ => Seq[Event]() // handle other event types
   }
 
   override def process(time: Int): Seq[Event] = {
-    Seq[Event]()
+    Seq[Event]() // this method is not used anymore
   }
 }
 
 class EndDayButton(gameState: GameState, button: Button) extends Entity {
   override val id = Entities.endDayButton
   button.onAction = (_) => {
-    gameState.getEntity(Entities.organismDisplay).events.enqueue(ButtonPressed(null))
+    this.events.enqueue(ButtonPressed())
   }
+
+  override val eventHandlers: PartialFunction[Event, Seq[Event]] = {case _ => Seq[Event]()}
 
   override def update(): Seq[Event] = {
     while(events.nonEmpty){
