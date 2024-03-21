@@ -1,13 +1,16 @@
-import scalafx.application.JFXApp3
-import scalafx.application.Platform
+import scalafx.Includes._
+import scalafx.application.{JFXApp3, Platform}
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.Scene
-import scalafx.scene.control.ListView
-import scalafx.scene.control.Button
+import scalafx.scene.control.{ListView, Button, ListCell}
 import scalafx.scene.layout.VBox
 import scalafx.animation.AnimationTimer
+
 import scala.util.Random
 import scala.collection.mutable
+
+import javafx.beans.value.{ChangeListener, ObservableValue}
+import javafx.util.Callback
 
 case class Organism(id: Long = Entities.newId, name: String, var age: Int) extends Entity {
   
@@ -104,18 +107,34 @@ case class EndDay(organism: Organism) extends Event {
   override val targetId =  organism.id
 }
 
-class OrganismDisplay(dataList: ObservableBuffer[String], listView: ListView[String]) extends Entity {
+class OrganismDisplay(dataList: ObservableBuffer[Organism], listView: ListView[Organism]) extends Entity {
   override val id = Entities.organismDisplay
   val organismMap: mutable.Map[Long, Int] = mutable.Map[Long,Int]()
-  
+  listView.getSelectionModel.selectedIndexProperty.addListener(new ChangeListener[Number] {
+    override def changed(observable: ObservableValue[? <: Number], oldIndex: Number, newIndex: Number): Unit = {
+      println(s"Selected: ${listView.getSelectionModel.getSelectedItem.display}")
+    }
+  })
+  listView.cellFactory = (listView: ListView[Organism]) => {
+    val cell = new ListCell[Organism] {
+      def updateItem(item: Organism, empty: Boolean): Unit = {
+        if (empty || item == null) {
+          text = ""
+        } else {
+          text = item.display
+        }
+      }
+    }
+    cell
+  }
   override val eventHandlers = {
     case event: UpdateOrganismDisplay =>
     val organism: Organism = event.organism
     if(organismMap.contains(organism.id)){
-      dataList.update(organismMap(organism.id), organism.display) // replace name with data to be displayed
+      dataList.update(organismMap(organism.id), organism) // replace name with data to be displayed
     } else {
       organismMap(organism.id) = dataList.size
-      dataList.add(organism.display)
+      dataList.add(organism)
     }
     Seq[Event]() // return an empty sequence of events
     case _ => Seq[Event]() // handle other event types
@@ -167,8 +186,8 @@ object SimpleApp extends JFXApp3 {
   val gameState: GameState = new GameState()
   
   override def start(): Unit = {
-    val dataList = ObservableBuffer[String]()
-    val listView = new ListView[String](dataList)
+    val dataList = ObservableBuffer[Organism]()
+    val listView = new ListView[Organism](dataList)
     gameState.addEntity(OrganismDisplay(dataList, listView))
     val first: Organism = Organism(name = "first!", age = 0)
     gameState.addEntity(first)
