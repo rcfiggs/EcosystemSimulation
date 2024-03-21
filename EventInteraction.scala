@@ -24,10 +24,11 @@ case class Organism(id: Long = Entities.newId, name: String, var age: Int) exten
 }
 
 object Entities {
-  val organismDisplay = 1
-  val endDayButton = 2
-  val thingList = 3
-  var nextId: Long = 4
+  val entityManager = 1
+  val organismDisplay = 2
+  val endDayButton = 3
+  val createOrganismButton = 4
+  var nextId: Long = 5
   def newId: Long = {
     val id = nextId
     nextId += 1
@@ -70,11 +71,34 @@ class GameState {
   }
 }
 
+class EntityManager(gameState: GameState) extends Entity {
+  override val id = Entities.entityManager
+  override val eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case e: CreateOrganism => 
+    // create a new organism entity
+    val newId = Entities.newId
+    val newOrganism = new Organism(newId, newId.toString, 0)
+    // add the new organism to the game state
+    gameState.addEntity(newOrganism)
+    // return a sequence of events that should be processed as a result of creating the organism
+    Seq(UpdateOrganismDisplay(newOrganism))
+  }
+  
+  override def process(time: Int): Seq[Event] = {
+    // the entity manager doesn't really process events, it just handles events that are related to creating new entities
+    Seq()
+  }
+}
+
+class CreateOrganism extends Event{
+  override val targetId = Entities.entityManager
+}
+
 case class UpdateOrganismDisplay(organism: Organism) extends Event {
   override val targetId = Entities.organismDisplay
 }
 
-case class ButtonPressed(targetId: Long = Entities.endDayButton) extends Event
+case class ButtonPressed(targetId: Long) extends Event
 
 case class EndDay(organism: Organism) extends Event {
   override val targetId =  organism.id
@@ -105,7 +129,7 @@ class OrganismDisplay(dataList: ObservableBuffer[String], listView: ListView[Str
 class EndDayButton(gameState: GameState, button: Button) extends Entity {
   override val id = Entities.endDayButton
   button.onAction = (_) => {
-    this.events.enqueue(ButtonPressed())
+    this.events.enqueue(ButtonPressed(id))
   }
   
   override val eventHandlers: PartialFunction[Event, Seq[Event]] = {
@@ -116,11 +140,28 @@ class EndDayButton(gameState: GameState, button: Button) extends Entity {
     }
     case _ => Seq[Event]()
   }
-  
   override def process(time: Int): Seq[Event] = {
     Seq[Event]()
   }
 }
+
+class CreateOrganismButton(button: Button) extends Entity {
+  override val id = Entities.createOrganismButton
+  button.onAction = (_) => {
+    this.events.enqueue(ButtonPressed(id))
+  }
+  
+  override val eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case event: ButtonPressed => {
+      Seq(CreateOrganism())
+    }
+    case _ => Seq[Event]()
+  }
+  
+  override def process(time: Int): Seq[Event] = {
+    Seq[Event]()
+  }
+}  
 
 object SimpleApp extends JFXApp3 {
   val gameState: GameState = new GameState()
@@ -136,8 +177,13 @@ object SimpleApp extends JFXApp3 {
     val endDayButton = new Button("End Day")
     gameState.addEntity(EndDayButton(gameState, endDayButton))
     
+    val createOrganismButton = new Button("Create Organism")
+    gameState.addEntity(CreateOrganismButton(createOrganismButton))
+    
+    gameState.addEntity(EntityManager(gameState))
+    
     val vbox = new VBox(10) {
-      children = Seq(listView, endDayButton)
+      children = Seq(listView, endDayButton, createOrganismButton)
     }
     
     stage = new JFXApp3.PrimaryStage {
