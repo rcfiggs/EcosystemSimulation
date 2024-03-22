@@ -12,18 +12,55 @@ import scala.collection.mutable
 import javafx.beans.value.{ChangeListener, ObservableValue}
 import javafx.util.Callback
 
-case class Organism(id: Long = Entities.newId, name: String, var age: Int) extends Entity {
+abstract class Organism(id: Long = Entities.newId, birthday: Int, var energy: Int, var hydration: Int) extends Entity {
   
-  override val eventHandlers: PartialFunction[Event, Seq[Event]] = {
-    case event: EndDay =>
-    this.age += 1
+  def eventHandlers: PartialFunction[Event, Seq[Event]]
+  
+  override def process(time: Int): Seq[Event] = {
+    this.energy -= hydrationLossRate(time)
+    this.hydration -= hydrationLossRate(time)
+    Seq(UpdateOrganismDisplay(this))
+  }
+  
+  def hydrationLossRate(time: Int): Int
+  
+  def display: String = s"${this.getClass.getSimpleName}: Energy: $energy, Hydration: $hydration"
+}
+
+case class Plant(id: Long, birthday: Int, var energy: Int = 100, var hydration: Int = 100) extends Organism(id, birthday, energy, hydration) {
+  
+  override def eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case event: Sunshine =>
+    this.energy += 10
     Seq(UpdateOrganismDisplay(this))
     case _ => Seq[Event]()
   }
   
-  override def process(time: Int): Seq[Event] = Seq[Event]()
+  override def hydrationLossRate(time: Int): Int = 2
+}
+
+case class Animal(id: Long, birthday: Int, var energy: Int = 100, var hydration: Int = 100) extends Organism(id, birthday, energy, hydration) {
   
-  def display: String = s"$name: $age"
+  override def eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case event: Sunshine =>
+    this.energy -= 10
+    Seq(UpdateOrganismDisplay(this))
+    case _ => Seq[Event]()
+  }
+  
+  override def hydrationLossRate(time: Int): Int = 3
+}
+
+case class Fungi(id: Long, birthday: Int, var energy: Int = 100, var hydration: Int = 100) extends Organism(id, birthday, energy, hydration) {
+  
+  override def eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case event: Rain =>
+    this.hydration += 10
+    Seq(UpdateOrganismDisplay(this))
+    case _ => Seq[Event]()
+  }
+  
+  override def hydrationLossRate(time: Int): Int = 1
 }
 
 object Entities {
@@ -199,7 +236,7 @@ object SimpleApp extends JFXApp3 {
     }
     
     AnimationTimer((now: Long) => {
-      gameState.processFrame(0)
+      gameState.processFrame(now)
     }).start()
   }
 }
