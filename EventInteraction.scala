@@ -115,18 +115,7 @@ class OrganismDisplay(dataList: ObservableBuffer[Organism], listView: ListView[O
       println(s"Selected: ${listView.getSelectionModel.getSelectedItem.display}")
     }
   })
-  listView.cellFactory = (listView: ListView[Organism]) => {
-    val cell = new ListCell[Organism] {
-      def updateItem(item: Organism, empty: Boolean): Unit = {
-        if (empty || item == null) {
-          text = ""
-        } else {
-          text = item.display
-        }
-      }
-    }
-    cell
-  }
+  listView.cellFactory = (cell: ListCell[Organism], organism: Organism) => cell.text = organism.display
   override val eventHandlers = {
     case event: UpdateOrganismDisplay =>
     val organism: Organism = event.organism
