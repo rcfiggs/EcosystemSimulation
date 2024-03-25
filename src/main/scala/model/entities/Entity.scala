@@ -34,6 +34,11 @@ class EntityManager(gameState: GameState) extends Entity {
     gameState.addEntity(e.organism)
     // return a sequence of events that should be processed as a result of creating the organism
     Seq(UpdateOrganismDisplay(e.organism))
+    case Perished(organism, time) => {
+      val perishedOrganism = PerishedOrganism(organism.id, (time / 60000).toInt)
+      gameState.setEntity(perishedOrganism)
+      Seq(UpdateOrganismDisplay(perishedOrganism))
+    }
     case _ => Seq[Event]()
   }
   override def process(time: Long): Seq[Event] = {

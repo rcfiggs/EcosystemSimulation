@@ -9,5 +9,4 @@ case class Fungi(birthday: Int) extends Organism {
     case _ => Seq[Event]()
   }
   
-  override def hydrationLossRate(time: Long): Int = 1
 }

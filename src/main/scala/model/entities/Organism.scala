@@ -5,22 +5,55 @@ trait Organism extends Entity {
   val birthday: Int
   var energy: Int = 100
   var hydration: Int = 100
-  var lastUpdateTime: Long = -1 // new field to track the last update time
-  
-  def process(time: Long): Seq[Event] = {
-    if(lastUpdateTime == -1){
-      lastUpdateTime = time
-      Seq()
-    } else {
-      val timeDifference = time - lastUpdateTime // calculate time difference
-      this.hydration -= hydrationLossRate(timeDifference) // use time difference to calculate hydration loss
-      this.lastUpdateTime = time // update last update time
-      Seq(UpdateOrganismDisplay(this))
+
+  val upkeep = List[UpkeepEventer](WaterLossEventer(this.id))
+
+  def eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case WaterLost(_, amount, time) =>  {
+      hydration -= amount
+      if (hydration <= 0) {
+        Seq(Perished(this, time))
+      } else Seq() 
     }
-    
+    case Perished(_, time) => Seq()
   }
   
-  def hydrationLossRate(timeDifference: Long): Int
+  def process(time: Long): Seq[Event] = {
+    val upkeepEvents = upkeep.flatMap {
+      case eventer: UpkeepEventer => {
+        if (eventer.lastEmittedTime + eventer.frequency >= time) {
+          eventer.lastEmittedTime = time
+          Seq(eventer.event(time))
+        } else Seq()
+          
+      } 
+      case _ => Seq()
+    }
+    if (upkeepEvents.nonEmpty) upkeepEvents :+ UpdateOrganismDisplay(this)
+    else upkeepEvents
+  }
   
   def display: String = s"${this.getClass.getSimpleName}: Energy: $energy, Hydration: $hydration"
+}
+
+trait UpkeepEventer {
+  val event: (time: Long) => Event
+  val frequency: Long
+  var lastEmittedTime: Long
+}
+
+case class WaterLost(targetId:Long, amount: Int, time: Long) extends Event
+case class WaterLossEventer(id: Long) extends UpkeepEventer {
+  val event = (time: Long) => WaterLost(id, 1, time)
+  val frequency: Long = 5000
+  var lastEmittedTime: Long = 0
+}
+
+case class Perished(organism: Organism, time: Long) extends Event{
+  override val targetId = Entities.entityManager
+}
+
+case class PerishedOrganism(targetId: Long, birthday: Int) extends Organism{
+  override def update() = Seq()
+  override def process(time: Long): Seq[Event] = Seq()
 }

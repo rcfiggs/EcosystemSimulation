@@ -10,6 +10,8 @@ class GameState {
   }
   
   def getEntity(id: Long): Entity = entities(id)
+
+  def setEntity(entity: Entity): Unit = entities(entity.id) = entity 
   
   def processFrame(time: Long): Unit = {
     for (entity <- entities.values) {
