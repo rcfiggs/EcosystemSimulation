@@ -8,6 +8,18 @@ trait Organism extends Entity {
 
   val upkeep = List[UpkeepEventer](WaterLossEventer(this.id))
 
+  override def update(): Seq[Event] = {
+    val organismHandlers: PartialFunction[Event, Seq[Event]] = {
+      case WaterLost(_, amount, time) =>  {
+        hydration -= amount
+        if (hydration <= 0) {
+          Seq(Perished(this, time))
+        } else Seq() 
+      }
+      case Perished(_, time) => Seq()
+  } 
+    events.dequeueAll(_ => true).flatMap(organismHandlers orElse eventHandlers)
+  }
   def eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case WaterLost(_, amount, time) =>  {
       hydration -= amount
@@ -21,7 +33,7 @@ trait Organism extends Entity {
   def process(time: Long): Seq[Event] = {
     val upkeepEvents = upkeep.flatMap {
       case eventer: UpkeepEventer => {
-        if (eventer.lastEmittedTime + eventer.frequency >= time) {
+        if (time >= eventer.lastEmittedTime + eventer.frequency) {
           eventer.lastEmittedTime = time
           Seq(eventer.event(time))
         } else Seq()
