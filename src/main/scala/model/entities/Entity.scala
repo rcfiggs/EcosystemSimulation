@@ -49,13 +49,11 @@ class EntityManager(gameState: GameState) extends Entity {
     }
     case event: SearchForWater =>
       val roll = scala.util.Random.nextInt(100)
-      if (roll < 20) { // 20% chance of finding a plant
+      if (roll < 100) { // 20% chance of finding a plant
         val potentialPlants = gameState.entities.collect{ case (id, p: Plant) => p }.toVector
         if(potentialPlants.nonEmpty) {
           val plant = potentialPlants(scala.util.Random.nextInt(potentialPlants.size))
-          Seq(
-            FoundPlant(targetId = event.senderId, plantId = plant.id)
-          ) 
+          Seq(FoundPlant(targetId = event.senderId, plantId = plant.id))
         }
         else Seq(NoPlantFound(event.senderId))
       } else {

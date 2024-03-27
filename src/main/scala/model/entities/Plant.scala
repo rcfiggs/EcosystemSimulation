@@ -2,7 +2,7 @@ package ecoApp
 
 import model.entities.DeliverWater
 
-case class ExtractWater(targetId: Long,amount: Int, senderId: Long) extends Event
+case class ExtractWater(targetId: Long, amount: Int, senderId: Long) extends Event 
 
 case class Plant(birthday: Int) extends Organism {
 
@@ -15,11 +15,7 @@ case class Plant(birthday: Int) extends Organism {
         true
       } else false
     },
-    eventGenerator = (_) => ExtractWater(
-      targetId = Entities.environment, 
-      amount = 100 - hydration, 
-      senderId = this.id
-    )
+    eventGenerator = (_) => ExtractWater(targetId = Entities.environment, amount = 100 - hydration, senderId = this.id)
   )
   
   override def eventEmitters = super.eventEmitters :++ Seq(checkWater)
@@ -32,5 +28,13 @@ case class Plant(birthday: Int) extends Organism {
         hydration = hydration + event.amount
         waterRequested = false
         Seq(UpdateOrganismDisplay(this))
+      case ExtractWater(_, amountRequested, senderId) =>
+        val amountGiven = Math.min(hydration, amountRequested)
+        hydration = hydration - amountGiven
+        if (hydration <= 0) {
+          Seq(DeliverWater(amount = amountGiven, targetId = senderId), Perished(this)) // Plant perishes
+        } else {
+          Seq(DeliverWater(amount = amountGiven, targetId = senderId))
+        }
     }
 }
