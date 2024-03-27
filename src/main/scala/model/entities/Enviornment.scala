@@ -11,7 +11,7 @@ case class Flood(time: Long, excessRainFall: Int) extends Event{
   override val targetId = Entities.entityManager
 }
 
-case class DeliverWater(override val targetId: Long, time: Long, amount: Int) extends Event
+case class DeliverWater(override val targetId: Long, amount: Int) extends Event
 
 case object Environment extends Entity {
   val id: Long = Entities.environment
@@ -40,7 +40,7 @@ case object Environment extends Entity {
     case ExtractWater(time, amount, senderId) => {
       val deliverable = Math.min(amount, waterInSoil)
       waterInSoil -= deliverable
-      Seq(DeliverWater(targetId = senderId, time = time, amount = deliverable), UpdateEnviornmentDisplay("Water", waterInSoil.toString))
+      Seq(DeliverWater(targetId = senderId, amount = deliverable), UpdateEnviornmentDisplay("Water", waterInSoil.toString))
     }
     // Add more event handlers as needed
   }

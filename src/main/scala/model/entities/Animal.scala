@@ -22,7 +22,7 @@ case class Animal(birthday: Int) extends Organism {
   override def eventHandlers: PartialFunction[Event, Seq[Event]] = super.eventHandlers orElse {
     case event: FoundPlant =>
     // logic to store the found plant
-    Seq(RequestWater(id, event.plantId))
+    Seq(ExtractWater(senderId = id, targetId = event.plantId, amount = 100 - hydration))
   case event: DeliverWater =>
     hydration = hydration + event.amount
     Seq(UpdateOrganismDisplay(this))

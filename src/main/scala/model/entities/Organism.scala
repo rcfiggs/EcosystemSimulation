@@ -19,7 +19,7 @@ trait Organism extends Entity {
     case WaterLost(_, amount, time) =>  {
       hydration -= amount
       if (hydration <= 0) {
-        Seq(Perished(this, time), UpdateOrganismDisplay(this))
+        Seq(Perished(this), UpdateOrganismDisplay(this))
       } else Seq(UpdateOrganismDisplay(this)) 
     }
   }
@@ -29,7 +29,7 @@ trait Organism extends Entity {
 
 case class WaterLost(targetId:Long, amount: Int, time: Long) extends Event
 
-case class Perished(organism: Organism, time: Long) extends Event{
+case class Perished(organism: Organism) extends Event{
   override val targetId = Entities.entityManager
 }
 

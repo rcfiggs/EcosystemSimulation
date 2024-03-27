@@ -42,8 +42,8 @@ class EntityManager(gameState: GameState) extends Entity {
     gameState.addEntity(e.organism)
     // return a sequence of events that should be processed as a result of creating the organism
     Seq(UpdateOrganismDisplay(e.organism))
-    case Perished(organism, time) => {
-      val perishedOrganism = PerishedOrganism(organism.id, (time / 60000).toInt)
+    case Perished(organism) => {
+      val perishedOrganism = PerishedOrganism(organism.id, 0)
       gameState.setEntity(perishedOrganism)
       Seq(UpdateOrganismDisplay(perishedOrganism))
     }
@@ -53,7 +53,9 @@ class EntityManager(gameState: GameState) extends Entity {
         val potentialPlants = gameState.entities.collect{ case (id, p: Plant) => p }.toVector
         if(potentialPlants.nonEmpty) {
           val plant = potentialPlants(scala.util.Random.nextInt(potentialPlants.size))
-          Seq(FoundPlant(event.senderId,plant.id), RequestWater(event.senderId, plant.id)) 
+          Seq(
+            FoundPlant(targetId = event.senderId, plantId = plant.id)
+          ) 
         }
         else Seq(NoPlantFound(event.senderId))
       } else {
