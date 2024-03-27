@@ -6,8 +6,13 @@ trait Organism extends Entity {
   var energy: Int = 100
   var hydration: Int = 100
 
+  val waterLossEmitter = TimedEmitter[WaterLost] (
+    frequency = 5000,
+    eventGenerator = (time) => WaterLost(this.id, 1, time)
+  )
+
   def eventEmitters: Seq[EventEmitter] = Seq(
-    WaterLossEmitter(this.id),
+    waterLossEmitter,
   )
   
   def eventHandlers: PartialFunction[Event, Seq[Event]] = {
@@ -23,10 +28,6 @@ trait Organism extends Entity {
 }
 
 case class WaterLost(targetId:Long, amount: Int, time: Long) extends Event
-case class WaterLossEmitter(id: Long) extends TimedEmitter[WaterLost] (
-  frequency = 5000,
-  eventGenerator = (time) => WaterLost(id, 1, time),
-)
 
 case class Perished(organism: Organism, time: Long) extends Event{
   override val targetId = Entities.entityManager
