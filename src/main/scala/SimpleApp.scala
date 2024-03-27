@@ -7,6 +7,7 @@ import scalafx.scene.Scene
 import scalafx.scene.control.{ListView, Button, ListCell, ChoiceBox}
 import scalafx.scene.layout.VBox
 import scalafx.animation.AnimationTimer
+import model.entities.Environment
 
 object SimpleApp extends JFXApp3 {
   def main(): Unit = {} 
@@ -16,6 +17,7 @@ object SimpleApp extends JFXApp3 {
     val dataList = ObservableBuffer[Organism]()
     val listView = new ListView[Organism](dataList)
     gameState.addEntity(OrganismDisplay(dataList, listView))
+    gameState.addEntity(Environment)
     
     val firstPlant = new Plant(birthday = 0)
     gameState.addEntity(firstPlant)

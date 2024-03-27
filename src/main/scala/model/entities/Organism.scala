@@ -7,7 +7,7 @@ trait Organism extends Entity {
   var hydration: Int = 100
 
   val waterLossEmitter = TimedEmitter[WaterLost] (
-    frequency = 5000,
+    frequency = 1000,
     eventGenerator = (time) => WaterLost(this.id, 1, time)
   )
 
