@@ -4,13 +4,16 @@ import scala.collection.mutable
 
 trait Entity {
   val id: Long
+  val eventEmitters: Seq[EventEmitter]
   val events: mutable.Queue[Event] = mutable.Queue[Event]()
   def eventHandlers: PartialFunction[Event, Seq[Event]]
   
   def update(): Seq[Event] = {
-    events.dequeueAll(_ => true).flatMap(eventHandlers)
+    events.dequeueAll(_ => true).flatMap(event => eventHandlers.lift(event).getOrElse(Seq()))
   }
-  def process(time: Long): Seq[Event]
+  def process(time: Long): Seq[Event] = {
+    eventEmitters.flatMap(_.emit(time))
+  }
 }
 
 object Entities {
@@ -18,7 +21,8 @@ object Entities {
   val organismDisplay = 2
   val endDayButton = 3
   val createOrganismButton = 4
-  var nextId: Long = 5
+  val environment = 5
+  var nextId: Long = 6
   def newId: Long = {
     val id = nextId
     nextId += 1
