@@ -33,7 +33,7 @@ case class Perished(organism: Organism, time: Long) extends Event{
   override val targetId = Entities.entityManager
 }
 
-case class PerishedOrganism(targetId: Long, birthday: Int) extends Organism{
+case class PerishedOrganism(override val id: Long, birthday: Int) extends Organism{
 
   override val eventEmitters: Seq[EventEmitter] = Seq()
 

@@ -8,8 +8,15 @@ case class ExtractWater(time: Long, amount: Int, senderId: Long) extends Event {
 
 case class Plant(birthday: Int) extends Organism {
 
+  var waterRequested: Boolean = false
+
   val checkWater = ConditionEmitter[ExtractWater](
-    condition = () => hydration < 95,
+    condition = () => {
+      if(!waterRequested && hydration < 95){
+        waterRequested = true;
+        true
+      } else false
+    },
     eventGenerator = (time) => ExtractWater(time, 100 - hydration, this.id)
   )
   
@@ -21,6 +28,7 @@ case class Plant(birthday: Int) extends Organism {
         Seq(UpdateOrganismDisplay(this))
       case event: DeliverWater =>
         hydration = hydration + event.amount
+        waterRequested = false
         Seq(UpdateOrganismDisplay(this))
     }
 }

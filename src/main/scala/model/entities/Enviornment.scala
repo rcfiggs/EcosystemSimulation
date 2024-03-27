@@ -20,7 +20,7 @@ case object Environment extends Entity {
 
   val rainfallEmitter = TimedEmitter(
     frequency = 30000, 
-    eventGenerator = time => Rainfall(time, scala.util.Random.nextInt(10) + 1)
+    eventGenerator = time => Rainfall(time, scala.util.Random.nextInt(45) + 15)
   )
   def eventEmitters: Seq[EventEmitter] = Seq(
     rainfallEmitter,
