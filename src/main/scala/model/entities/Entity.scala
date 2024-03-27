@@ -22,7 +22,8 @@ object Entities {
   val endDayButton = 3
   val createOrganismButton = 4
   val environment = 5
-  var nextId: Long = 6
+  val environmentDisplay = 6
+  var nextId: Long = 7
   def newId: Long = {
     val id = nextId
     nextId += 1

@@ -1,3 +1,4 @@
+
 package ecoApp
 
 import scalafx.Includes._
@@ -5,9 +6,14 @@ import scalafx.application.{JFXApp3, Platform}
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.Scene
 import scalafx.scene.control.{ListView, Button, ListCell, ChoiceBox}
-import scalafx.scene.layout.VBox
+import scalafx.scene.text.Text
+import scalafx.scene.layout.{VBox, HBox}
 import scalafx.animation.AnimationTimer
 import model.entities.Environment
+import ecoApp.Entities.environment
+import view.EnvironmentDisplay
+import view.UpdateEnviornmentDisplay
+
 
 object SimpleApp extends JFXApp3 {
   def main(): Unit = {} 
@@ -17,7 +23,8 @@ object SimpleApp extends JFXApp3 {
     val dataList = ObservableBuffer[Organism]()
     val listView = new ListView[Organism](dataList)
     gameState.addEntity(OrganismDisplay(dataList, listView))
-    gameState.addEntity(Environment)
+    val environment = Environment
+    gameState.addEntity(environment)
     
     val firstPlant = new Plant(birthday = 0)
     gameState.addEntity(firstPlant)
@@ -40,9 +47,14 @@ object SimpleApp extends JFXApp3 {
     gameState.addEntity(CreateOrganismButton(createOrganismButton, organismChoice))
     
     gameState.addEntity(EntityManager(gameState))
-    
+
+    val environmentData = ObservableBuffer[String]()
+    val environmentList = ListView[String](environmentData)
+    gameState.addEntity(EnvironmentDisplay(environmentData, environmentList))
+    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay("Water", environment.waterInSoil.toString))
+
     val vbox = new VBox(10) {
-      children = Seq(listView, endDayButton, organismChoice, createOrganismButton)
+      children = Seq(Text("Environment"), environmentList, Text("Organisms"), listView, endDayButton, organismChoice, createOrganismButton)
     }
     
     stage = new JFXApp3.PrimaryStage {

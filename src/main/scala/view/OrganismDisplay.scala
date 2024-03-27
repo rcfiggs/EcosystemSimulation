@@ -7,6 +7,10 @@ import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import scalafx.scene.control.ListCell
 
+case class UpdateOrganismDisplay(organism: Organism) extends Event {
+  override val targetId = Entities.organismDisplay
+}
+
 class OrganismDisplay(dataList: ObservableBuffer[Organism], listView: ListView[Organism]) extends Entity {
   override val id = Entities.organismDisplay
   val organismMap: mutable.Map[Long, Int] = mutable.Map[Long,Int]()

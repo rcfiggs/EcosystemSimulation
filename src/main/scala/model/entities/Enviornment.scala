@@ -1,5 +1,7 @@
 package model.entities
 import ecoApp._
+import view.UpdateEnviornmentDisplay
+
 
 case class Rainfall(time: Long, amount: Int) extends Event {
   override val targetId = Entities.environment
@@ -30,15 +32,15 @@ case object Environment extends Entity {
       val excessRainfall = math.max(0, waterInSoil + amount - maxWaterInSoil)
       waterInSoil = math.min(waterInSoil + amount, maxWaterInSoil)
       if (excessRainfall > 0) {
-        Seq(Flood(time, excessRainfall))
+        Seq(Flood(time, excessRainfall), UpdateEnviornmentDisplay("Water", waterInSoil.toString))
       } else {
-        Seq()
+        Seq(UpdateEnviornmentDisplay("Water", waterInSoil.toString))
       }
     }
     case ExtractWater(time, amount, senderId) => {
       val deliverable = Math.min(amount, waterInSoil)
       waterInSoil -= deliverable
-      Seq(DeliverWater(targetId = senderId, time = time, amount = deliverable))
+      Seq(DeliverWater(targetId = senderId, time = time, amount = deliverable), UpdateEnviornmentDisplay("Water", waterInSoil.toString))
     }
     // Add more event handlers as needed
   }
