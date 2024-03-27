@@ -10,7 +10,7 @@ case class Plant(birthday: Int) extends Organism {
 
   var waterRequested: Boolean = false
 
-  val checkWater = ConditionEmitter[ExtractWater](
+  val checkWater = ConditionalEmitter[ExtractWater](
     condition = () => {
       if(!waterRequested && hydration < 95){
         waterRequested = true;

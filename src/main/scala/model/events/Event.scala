@@ -21,7 +21,7 @@ case class TimedEmitter[E <: Event](frequency: Int, eventGenerator: (Long) => E)
   }
 }
 
-case class ConditionEmitter[E <: Event](condition: () => Boolean, eventGenerator: (Long) => E) extends EventEmitter {
+case class ConditionalEmitter[E <: Event](condition: () => Boolean, eventGenerator: (Long) => E) extends EventEmitter {
   override def emit(time: Long): Seq[E] = {
     if (condition()) {
       Seq(eventGenerator(time))
