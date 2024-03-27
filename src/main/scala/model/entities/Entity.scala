@@ -4,7 +4,7 @@ import scala.collection.mutable
 
 trait Entity {
   val id: Long
-  val eventEmitters: Seq[EventEmitter]
+  def eventEmitters: Seq[EventEmitter]
   val events: mutable.Queue[Event] = mutable.Queue[Event]()
   def eventHandlers: PartialFunction[Event, Seq[Event]]
   
@@ -32,6 +32,9 @@ object Entities {
 
 class EntityManager(gameState: GameState) extends Entity {
   override val id = Entities.entityManager
+
+  override val eventEmitters: Seq[EventEmitter] = Seq()
+
   override val eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case e: CreateOrganism => 
     // add the new organism to the game state
@@ -44,9 +47,5 @@ class EntityManager(gameState: GameState) extends Entity {
       Seq(UpdateOrganismDisplay(perishedOrganism))
     }
     case _ => Seq[Event]()
-  }
-  override def process(time: Long): Seq[Event] = {
-    // the entity manager doesn't really process events, it just handles events that are related to creating new entities
-    Seq()
   }
 }

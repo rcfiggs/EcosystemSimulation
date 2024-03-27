@@ -12,12 +12,12 @@ case class CheckWater[O <: Organism](organism: O) extends EventEmitter{
 }
 case class Plant(birthday: Int) extends Organism {
   
-  override val eventEmitters = Seq(CheckWater(this))
+  override val eventEmitters = super.eventEmitters :++ Seq(CheckWater(this))
 
-  override def eventHandlers: PartialFunction[Event, Seq[Event]] = {
+  override def eventHandlers: PartialFunction[Event, Seq[Event]] = super.eventHandlers orElse {
       case event: EndDay =>
-      this.energy += 1
-      Seq(UpdateOrganismDisplay(this))
+        this.energy += 1
+        Seq(UpdateOrganismDisplay(this))
       case _ => Seq[Event]()
     }
 }

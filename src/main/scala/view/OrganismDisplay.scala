@@ -16,7 +16,9 @@ class OrganismDisplay(dataList: ObservableBuffer[Organism], listView: ListView[O
     }
   })
   listView.cellFactory = (cell: ListCell[Organism], organism: Organism) => cell.text = organism.display
-  override val eventHandlers = {
+  
+  def eventEmitters: Seq[EventEmitter] = Seq()
+  val eventHandlers = {
     case event: UpdateOrganismDisplay =>
     val organism: Organism = event.organism
     if(organismMap.contains(organism.id)){
@@ -27,9 +29,5 @@ class OrganismDisplay(dataList: ObservableBuffer[Organism], listView: ListView[O
     }
     Seq[Event]() // return an empty sequence of events
     case _ => Seq[Event]() // handle other event types
-  }
-  
-  override def process(time: Long): Seq[Event] = {
-    Seq[Event]() // this method is not used anymore
   }
 }

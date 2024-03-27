@@ -7,16 +7,15 @@ class EndDayButton(gameState: GameState, button: Button) extends Entity {
   button.onAction = (_) => {
     this.events.enqueue(ButtonPressed(id))
   }
+
+  def eventEmitters = Seq()
   
-  override val eventHandlers: PartialFunction[Event, Seq[Event]] = {
+  val eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case event: ButtonPressed => {
       gameState.entities.values.collect {
         case organism: Organism => EndDay(organism)
       }.toSeq
     }
     case _ => Seq[Event]()
-  }
-  override def process(time: Long): Seq[Event] = {
-    Seq[Event]()
   }
 }

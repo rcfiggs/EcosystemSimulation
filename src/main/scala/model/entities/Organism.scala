@@ -5,61 +5,38 @@ trait Organism extends Entity {
   val birthday: Int
   var energy: Int = 100
   var hydration: Int = 100
+
+  def eventEmitters: Seq[EventEmitter] = Seq(
+    WaterLossEmitter(this.id),
+  )
   
-  val upkeep = List[UpkeepEventer](WaterLossEventer(this.id))
-  
-  override def update(): Seq[Event] = {
-    val organismHandlers: PartialFunction[Event, Seq[Event]] = {
-      case WaterLost(_, amount, time) =>  {
-        hydration -= amount
-        if (hydration <= 0) {
-          Seq(Perished(this, time))
-        } else Seq() 
-      }
-      case Perished(_, time) => Seq()
-    } 
-    events.dequeueAll(_ => true).flatMap(organismHandlers orElse eventHandlers)
+  def eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case WaterLost(_, amount, time) =>  {
+      hydration -= amount
+      if (hydration <= 0) {
+        Seq(Perished(this, time), UpdateOrganismDisplay(this))
+      } else Seq(UpdateOrganismDisplay(this)) 
+    }
   }
-  
-  // def process(time: Long): Seq[Event] = {
-  //   val upkeepEvents = upkeep.flatMap {
-  //     case eventer: UpkeepEventer => {
-  //       if (time >= eventer.lastEmittedTime + eventer.frequency) {
-  //         eventer.lastEmittedTime = time
-  //         Seq(eventer.event(time))
-  //       } else Seq()
-        
-  //     } 
-  //     case _ => Seq()
-  //   }
-  //   if (upkeepEvents.nonEmpty) upkeepEvents :+ UpdateOrganismDisplay(this)
-  //   else upkeepEvents
-  // }
   
   def display: String = s"${this.getClass.getSimpleName}: Energy: $energy, Hydration: $hydration"
 }
 
-trait TimedEmitter[O <: Organism](organism: O) extends EventEmitter {
-  val event: (time: Long) => Event
-  val frequency: Long
-  var lastEmittedTime: Long
-  override def emit(time: Long): Seq[Event] = {
-
-  }
-}
-
 case class WaterLost(targetId:Long, amount: Int, time: Long) extends Event
-case class WaterLossEventer(id: Long) extends UpkeepEventer {
-  val event = (time: Long) => WaterLost(id, 1, time)
-  val frequency: Long = 5000
-  var lastEmittedTime: Long = 0
-}
+case class WaterLossEmitter(id: Long) extends TimedEmitter[WaterLost] (
+  frequency = 5000,
+  eventGenerator = (time) => WaterLost(id, 1, time),
+)
 
 case class Perished(organism: Organism, time: Long) extends Event{
   override val targetId = Entities.entityManager
 }
 
 case class PerishedOrganism(targetId: Long, birthday: Int) extends Organism{
-  override def update() = Seq()
-  override def process(time: Long): Seq[Event] = Seq()
+
+  override val eventEmitters: Seq[EventEmitter] = Seq()
+
+  override def eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case _ => Seq()
+  }
 }

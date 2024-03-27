@@ -7,8 +7,10 @@ class CreateOrganismButton(button: Button, choiceBox: ChoiceBox[String]) extends
   button.onAction = (_) => {
     this.events.enqueue(ButtonPressed(id))
   }
+
+  def eventEmitters: Seq[EventEmitter] = Seq()
   
-  override val eventHandlers: PartialFunction[Event, Seq[Event]] = {
+  val eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case event: ButtonPressed => {
       val organismType = choiceBox.getValue
       organismType match {
@@ -19,9 +21,5 @@ class CreateOrganismButton(button: Button, choiceBox: ChoiceBox[String]) extends
       }
     }
     case _ => Seq[Event]()
-  }
-  
-  override def process(time: Long): Seq[Event] = {
-    Seq[Event]()
   }
 }
