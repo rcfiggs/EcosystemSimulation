@@ -7,11 +7,21 @@ case class NoPlantFound(targetId: Long) extends Event
 
 case class SearchForWater(senderId: Long) extends Event {
   override val targetId = Entities.entityManager
+  println("Searching for water")
 }
 case class Animal(birthday: Int) extends Organism {
 
+  var needsWater: Boolean = false
+
   val checkWater = ConditionalEmitter[SearchForWater](
-    condition = () => hydration < 80, // Threshold for thirst
+    condition = () => { 
+      if(!needsWater && hydration < 80){
+        needsWater = true
+        true
+      } else {
+        false
+      }
+    }, // Threshold for thirst
     eventGenerator = (_) => SearchForWater(this.id)
   )
 
@@ -22,6 +32,7 @@ case class Animal(birthday: Int) extends Organism {
     // logic to store the found plant
     Seq(ExtractWater(senderId = this.id, amount = 100 - hydration, targetId = event.plantId))
   case event: DeliverWater =>
+    needsWater = false
     hydration = hydration + event.amount
     Seq(UpdateOrganismDisplay(this))
   }
