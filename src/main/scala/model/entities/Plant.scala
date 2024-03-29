@@ -6,7 +6,7 @@ case class ExtractWater(targetId: Long, amount: Int, senderId: Long) extends Eve
 
 case class Plant(birthday: Int) extends Organism {
 
-  var waterRequested: Boolean = false
+  private var waterRequested: Boolean = false
 
   val checkWater = ConditionalEmitter[ExtractWater](
     condition = () => {
