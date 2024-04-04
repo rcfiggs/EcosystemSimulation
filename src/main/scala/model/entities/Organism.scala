@@ -5,6 +5,7 @@ trait Organism extends Entity {
   val birthday: Int
   var energy: Int = 100
   var hydration: Int = 100
+  var nutrients: Int = 100
 
   val waterLossEmitter = TimedEmitter[WaterLost] (
     frequency = 1000,
