@@ -27,7 +27,6 @@ case object Environment extends Entity {
   )
   def eventEmitters: Seq[EventEmitter] = Seq(
     rainfallEmitter,
-    // Add more event emitters as needed
   )
 
   def eventHandlers: PartialFunction[Event, Seq[Event]] = {
@@ -43,13 +42,12 @@ case object Environment extends Entity {
     case ExtractWater(time, amount, senderId) => {
       val deliverable = Math.min(amount, waterInSoil)
       waterInSoil -= deliverable
-      Seq(DeliverWater(targetId = senderId, amount = deliverable), UpdateEnviornmentDisplay("Water", waterInSoil.toString))
+      Seq(ResourceGain(targetId = senderId, amount = deliverable, resource = Resource.Water), UpdateEnviornmentDisplay("Water", waterInSoil.toString))
     }
     case ExtractNutrients(_, amount, senderId) => {
       val deliverable = Math.min(amount, nutrientsInSoil)
       nutrientsInSoil -= deliverable
-      Seq(DeliverNutrients(targetId = senderId, amount = deliverable), UpdateEnviornmentDisplay("Water", waterInSoil.toString))
+      Seq(ResourceGain(targetId = senderId, amount = deliverable, resource = Resource.Nutrient), UpdateEnviornmentDisplay("Nutrient", waterInSoil.toString))
     }
-    // Add more event handlers as needed
   }
 }

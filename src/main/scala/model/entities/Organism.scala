@@ -1,15 +1,25 @@
 package ecoApp
 
+import scala.collection.mutable.Map
+
+enum Resource {
+  case Water, Energy, Nutrient
+}
+
 trait Organism extends Entity {
+  import Resource._
   val id: Long = Entities.newId
   val birthday: Int
-  var energy: Int = 100
-  var hydration: Int = 100
-  var nutrients: Int = 100
+  val resources = Map[Resource, Int]()
+  resources.addAll(Seq(
+    (Water, 100),
+    (Energy, 100),
+    (Nutrient, 100)
+  ))
 
-  val waterLossEmitter = TimedEmitter[WaterLost] (
+  val waterLossEmitter = TimedEmitter[ResourceLost] (
     frequency = 1000,
-    eventGenerator = (time) => WaterLost(this.id, 1)
+    eventGenerator = (time) => ResourceLost(this.id, 1, Water)
   )
 
   def eventEmitters: Seq[EventEmitter] = Seq(
@@ -17,16 +27,24 @@ trait Organism extends Entity {
   )
   
   def eventHandlers: PartialFunction[Event, Seq[Event]] = {
-    case WaterLost(_, amount) =>  {
-      hydration -= amount
-      if (hydration <= 0) {
-        Seq(Perished(this), UpdateOrganismDisplay(this))
-      } else Seq(UpdateOrganismDisplay(this)) 
+    case ResourceLost(_, amount, resource) => {
+      val cur = resources(resource)
+      resources.update(resource, cur - (cur min amount))
+      Seq(UpdateOrganismDisplay(this))
+    }
+    case ResourceGain(_, amount, resource) => {
+      val cur =  resources(resource)
+      resources.update(resource, cur + amount)
+      Seq(UpdateOrganismDisplay(this))
     }
   }
   
-  def display: String = s"${this.getClass.getSimpleName}: Energy: $energy, Hydration: $hydration"
+  def display: String = s"${this.getClass.getSimpleName}: Energy: ${resources(Energy)}, Hydration: ${resources(Water)}, Nutrients: ${resources(Nutrient)}"
 }
+
+case class ResourceLost(targetId: Long, amount: Int, resource: Resource) extends Event
+
+case class ResourceGain(targetId: Long, amount: Int, resource: Resource) extends Event
 
 case class WaterLost(targetId:Long, amount: Int) extends Event
 
