@@ -6,34 +6,42 @@ import Resource._
 case class FoundPlant(targetId: Long, plantId: Long) extends Event
 case class NoPlantFound(targetId: Long) extends Event
 
-case class SearchForWater(senderId: Long) extends Event {
+case class SearchForPlant(senderId: Long) extends Event {
   override val targetId = Entities.entityManager
-  println("Searching for water")
+  println("Searching for plant")
 }
 case class Animal(birthday: Int) extends Organism {
-
-  var needsWater: Boolean = false
-
-  val checkWater = ConditionalEmitter[SearchForWater](
-    condition = () => { 
-      if(!needsWater && resources(Water) < 80){
-        needsWater = true
-        true
-      } else {
-        false
-      }
-    },
-    eventGenerator = (_) => SearchForWater(this.id)
+  
+  var targetPlant: Option[Long] = None
+  
+  val checkPlant = ConditionalEmitter[SearchForPlant](
+  condition = () => !targetPlant.isDefined,
+  eventGenerator = (_) => Some(SearchForPlant(this.id))
   )
-
-  override def eventEmitters = super.eventEmitters :++ Seq(checkWater)
-
+  
+  val checkWater = ConditionalEmitter[ExtractWater](
+  condition = () => targetPlant.isDefined && resources(Water) < 80,
+  eventGenerator = (_) => targetPlant match {
+    case Some(plantId) => Some(ExtractWater(plantId, 100 - resources(Water), this))
+    case None => None
+  }
+  )
+  
+  override def eventEmitters = super.eventEmitters :++ Seq(checkPlant, checkWater)
+  
   override def eventHandlers: PartialFunction[Event, Seq[Event]] = super.eventHandlers orElse {
-    case event: FoundPlant =>
-    // logic to store the found plant
-    Seq(ExtractWater(senderId = this.id, amount = 100 - resources(Water), targetId = event.plantId))
-  case event: DeliverWater =>
-    needsWater = false
-    Seq(ResourceGain(this.id, event.amount, Water), UpdateOrganismDisplay(this))
+    case FoundPlant(_, plantId) =>
+      targetPlant = Some(plantId)
+      Seq()
+    case NoPlantFound(_) => 
+      targetPlant = None
+      Seq() 
+    case IsPerished(_, perishedOrganism) => targetPlant match {
+      case Some(plantId) if plantId == perishedOrganism.id => {
+        targetPlant = None
+        Seq()
+      }
+      case _ => Seq()
+    }
   }
 }

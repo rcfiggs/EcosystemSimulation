@@ -47,7 +47,7 @@ class EntityManager(gameState: GameState) extends Entity {
       gameState.setEntity(perishedOrganism)
       Seq(UpdateOrganismDisplay(perishedOrganism))
     }
-    case event: SearchForWater =>
+    case event: SearchForPlant =>
       val roll = scala.util.Random.nextInt(100)
       if (roll < 100) { // 20% chance of finding a plant
         val potentialPlants = gameState.entities.collect{ case (id, p: Plant) => p }.toVector

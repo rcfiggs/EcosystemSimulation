@@ -17,7 +17,7 @@ case class DeliverNutrients(override val targetId: Long, amount: Int) extends Ev
 
 case object Environment extends Entity {
   val id: Long = Entities.environment
-  var waterInSoil: Int = 50
+  var waterInSoil: Int = 0
   val maxWaterInSoil: Int = 100
   var nutrientsInSoil: Int = 1000
 
@@ -39,10 +39,10 @@ case object Environment extends Entity {
         Seq(UpdateEnviornmentDisplay("Water", waterInSoil.toString))
       }
     }
-    case ExtractWater(time, amount, senderId) => {
+    case ExtractWater(time, amount, sender) => {
       val deliverable = Math.min(amount, waterInSoil)
       waterInSoil -= deliverable
-      Seq(ResourceGain(targetId = senderId, amount = deliverable, resource = Resource.Water), UpdateEnviornmentDisplay("Water", waterInSoil.toString))
+      Seq(ResourceGain(targetId = sender.id, amount = deliverable, resource = Resource.Water), UpdateEnviornmentDisplay("Water", waterInSoil.toString))
     }
     case ExtractNutrients(_, amount, senderId) => {
       val deliverable = Math.min(amount, nutrientsInSoil)
