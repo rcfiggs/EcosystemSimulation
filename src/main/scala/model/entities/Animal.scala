@@ -19,10 +19,10 @@ case class Animal(birthday: Int) extends Organism {
   eventGenerator = (_) => Some(SearchForPlant(this.id))
   )
   
-  val checkWater = ConditionalEmitter[ExtractWater](
+  val checkWater = ConditionalEmitter[ExtractResource](
   condition = () => targetPlant.isDefined && resources(Water) < 80,
   eventGenerator = (_) => targetPlant match {
-    case Some(plantId) => Some(ExtractWater(plantId, 100 - resources(Water), this))
+    case Some(plantId) => Some(ExtractResource(resource = Water, targetId = plantId, amount = 100 - resources(Water), sender = this))
     case None => None
   }
   )

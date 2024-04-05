@@ -51,7 +51,7 @@ object SimpleApp extends JFXApp3 {
     val environmentData = ObservableBuffer[String]()
     val environmentList = ListView[String](environmentData)
     gameState.addEntity(EnvironmentDisplay(environmentData, environmentList))
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay("Water", environment.waterInSoil.toString))
+    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay("Water", environment.resources(Resource.Water).toString))
 
     val vbox = new VBox(10) {
       children = Seq(Text("Environment"), environmentList, Text("Organisms"), listView, endDayButton, organismChoice, createOrganismButton)

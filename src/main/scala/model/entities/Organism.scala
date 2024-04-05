@@ -19,7 +19,7 @@ trait Organism extends Entity {
 
   val waterLossEmitter = TimedEmitter[ResourceLost] (
     frequency = 1000,
-    eventGenerator = (time) => ResourceLost(this.id, 1, Water)
+    eventGenerator = (time) => ResourceLost(targetId = this.id, resource = Water, amount = 1)
   )
 
   def eventEmitters: Seq[EventEmitter] = Seq(
@@ -27,7 +27,7 @@ trait Organism extends Entity {
   )
   
   def eventHandlers: PartialFunction[Event, Seq[Event]] = {
-    case ResourceLost(_, amount, resource) => {
+    case ResourceLost(_, resource, amount) => {
       val cur = resources(resource)
       resources.update(resource, cur - (cur min amount))
       (resource match {
@@ -35,16 +35,16 @@ trait Organism extends Entity {
         case _ => Seq()
       }) :+ UpdateOrganismDisplay(this)
     }
-    case ResourceGain(_, amount, resource) => {
+    case ResourceGain(_, resource, amount) => {
       val cur = resources(resource)
       resources.update(resource, cur + amount)
       Seq(UpdateOrganismDisplay(this))
     }
-    case ExtractWater(_, amount, sender) => {
-      val deliverableWater = resources(Water) min amount
+    case ExtractResource(_, resource, amount, sender) => {
+      val deliverable = resources(resource) min amount
       Seq(
-        ResourceLost(this.id, deliverableWater, Water),
-        ResourceGain(sender.id, deliverableWater, Water),
+        ResourceLost(targetId = this.id, resource = resource, amount = deliverable),
+        ResourceGain(targetId = sender.id, resource = resource, amount = deliverable),
       )
     }
   }
@@ -52,9 +52,11 @@ trait Organism extends Entity {
   def display: String = s"${this.getClass.getSimpleName}: Energy: ${resources(Energy)}, Hydration: ${resources(Water)}, Nutrients: ${resources(Nutrient)}"
 }
 
-case class ResourceLost(targetId: Long, amount: Int, resource: Resource) extends Event
+case class ResourceLost(targetId: Long, resource: Resource, amount: Int) extends Event
 
-case class ResourceGain(targetId: Long, amount: Int, resource: Resource) extends Event
+case class ResourceGain(targetId: Long, resource: Resource, amount: Int) extends Event
+
+case class ExtractResource(targetId: Long, resource: Resource, amount: Int, sender: Organism) extends Event
 
 case class Perished(organism: Organism) extends Event{
   override val targetId = Entities.entityManager
@@ -67,7 +69,7 @@ case class PerishedOrganism(override val id: Long, birthday: Int) extends Organi
   override val eventEmitters: Seq[EventEmitter] = Seq()
 
   override def eventHandlers: PartialFunction[Event, Seq[Event]] = {
-    case ExtractWater(_, amount, sender) =>
+    case ExtractResource(_, resource, amount, sender) =>
       sender match {
         case animal: Animal => Seq(IsPerished(sender.id, this))
         case fungi: Fungi => Seq() // TODO add fungi extaction logic

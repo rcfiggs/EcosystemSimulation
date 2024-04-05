@@ -1,16 +1,12 @@
 package ecoApp
 
-import model.entities.DeliverWater
-import model.entities.ExtractNutrients
 import Resource._
-
-case class ExtractWater(targetId: Long, amount: Int, sender: Organism) extends Event 
 
 case class Plant(birthday: Int) extends Organism {
 
-  val checkWater = ConditionalEmitter[ExtractWater](
+  val checkWater = ConditionalEmitter[ExtractResource](
     condition = () => (resources(Water) < 95),
-    eventGenerator = (_) => Some(ExtractWater(targetId = Entities.environment, amount = 100 - resources(Water), sender = this))
+    eventGenerator = (_) => Some(ExtractResource(targetId = Entities.environment, amount = 100 - resources(Water), sender = this, resource = Resource.Water))
   )
   
   override def eventEmitters = super.eventEmitters :++ Seq(checkWater)
