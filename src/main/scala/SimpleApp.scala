@@ -13,6 +13,7 @@ import model.entities.Environment
 import ecoApp.Entities.environment
 import view.EnvironmentDisplay
 import view.UpdateEnviornmentDisplay
+import model.Resources._
 
 
 object SimpleApp extends JFXApp3 {
@@ -51,8 +52,8 @@ object SimpleApp extends JFXApp3 {
     val environmentData = ObservableBuffer[String]()
     val environmentList = ListView[String](environmentData)
     gameState.addEntity(EnvironmentDisplay(environmentData, environmentList))
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay("Water", environment.resources(Resource.Water).toString))
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay("Nutrient", environment.resources(Resource.Nutrient).toString))
+    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay("Water", environment.resources(Water).toString))
+    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay("Nutrient", environment.resources(Nutrient).toString))
 
     val vbox = new VBox(10) {
       children = Seq(Text("Environment"), environmentList, Text("Organisms"), listView, endDayButton, organismChoice, createOrganismButton)

@@ -1,12 +1,12 @@
 package ecoApp
 
-import Resource._
+import model.Resources._
 
 case class Plant(birthday: Int) extends Organism {
   
-  val checkWater = ConditionalEmitter[ExtractResource](
+  val checkWater = ConditionalEmitter[ExtractResource[EnvironmentalResource]](
     condition = () => (resources(Water) < 95),
-    eventGenerator = (_) => Some(ExtractResource(targetId = Entities.environment, amount = 100 - resources(Water), sender = this, resource = Resource.Water))
+    eventGenerator = (_) => Some(ExtractResource(targetId = Entities.environment, amount = 100 - resources(Water), sender = this, resource = Water))
   )
   
   val extractNutrients = ConditionalEmitter[SpendResource](

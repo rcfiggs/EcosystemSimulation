@@ -1,7 +1,7 @@
 package ecoApp
 
 import model.entities.DeliverWater
-import Resource._
+import model.Resources._
 
 case class FoundPlant(targetId: Long, plantId: Long) extends Event
 case class NoPlantFound(targetId: Long) extends Event
@@ -19,7 +19,7 @@ case class Animal(birthday: Int) extends Organism {
   eventGenerator = (_) => Some(SearchForPlant(this.id))
   )
   
-  val checkWater = ConditionalEmitter[ExtractResource](
+  val checkWater = ConditionalEmitter[ExtractResource[OrganismResource]](
   condition = () => targetPlant.isDefined && resources(Water) < 80,
   eventGenerator = (_) => targetPlant match {
     case Some(plantId) => Some(ExtractResource(resource = Water, targetId = plantId, amount = 100 - resources(Water), sender = this))
