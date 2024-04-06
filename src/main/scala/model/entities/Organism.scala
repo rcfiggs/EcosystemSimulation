@@ -45,14 +45,31 @@ trait Organism extends Entity {
       ResourceGain(targetId = sender.id, resource = resource, amount = deliverable),
       )
     }
-    case SpendResource(_, resource, amount, resultingEvent) => {
+    case SpendResource(_, resource, amount, resultingEvent, sender) => {
       val cur = resources(resource)
       if (cur >= amount) {
         resources.update(resource, cur - amount)
         Seq(resultingEvent, UpdateOrganismDisplay(this))
       } else {
-        // Optionally handle the case where the organism can't afford the expenditure - for now, do nothing. 
         Seq()
+      }
+    }
+    case SpendResources(targetId, requiredResources, resultingEvents, sender) => {
+      val (sufficient, insufficient) = requiredResources.partition { case (resource, amount) => resources(resource) >= amount }
+
+      if (insufficient.isEmpty) {
+        sufficient.foreach { case (resource, amount) => 
+          val cur = resources(resource)
+          resources.update(resource, cur - amount) 
+        }
+        resultingEvents :+ UpdateOrganismDisplay(this)
+      } else {
+        // Handle insufficient resources, maybe generate a different event or log
+        Seq(InsufficientResources(
+          targetId = sender.id, 
+          insufficientResources = insufficient,
+          failedEvents = resultingEvents 
+        ))
       }
     }
   }
@@ -66,7 +83,10 @@ case class ResourceGain[R <: Resource](targetId: Long, resource: R, amount: Int)
 
 case class ExtractResource[R <: Resource](targetId: Long, resource: R, amount: Int, sender: Organism) extends Event
 
-case class SpendResource(targetId: Long, resource: OrganismResource, amount: Int, resultingEvent: Event) extends Event
+case class SpendResources(targetId: Long, resources: Map[OrganismResource, Int], resultingEvents: Seq[Event] = Seq.empty, sender: Organism) extends Event
+case class SpendResource(targetId: Long, resource: OrganismResource, amount: Int, resultingEvent: Event, sender: Organism) extends Event
+
+case class InsufficientResources(targetId: Long, insufficientResources: Map[OrganismResource, Int], failedEvents: Seq[Event]) extends Event
 
 case class Perished(organism: Organism) extends Event{
   override val targetId = Entities.entityManager
