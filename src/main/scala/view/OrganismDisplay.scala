@@ -7,11 +7,11 @@ import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import scalafx.scene.control.ListCell
 
-case class UpdateOrganismDisplay(organism: Organism) extends Event {
+case class UpdateOrganismDisplay(organism: Organism[?]) extends Event {
   override val targetId = Entities.organismDisplay
 }
 
-class OrganismDisplay(dataList: ObservableBuffer[Organism], listView: ListView[Organism]) extends Entity {
+class OrganismDisplay(dataList: ObservableBuffer[Organism[?]], listView: ListView[Organism[?]]) extends Entity {
   override val id = Entities.organismDisplay
   val organismMap: mutable.Map[Long, Int] = mutable.Map[Long,Int]()
   listView.getSelectionModel.selectedIndexProperty.addListener(new ChangeListener[Number] {
@@ -19,12 +19,12 @@ class OrganismDisplay(dataList: ObservableBuffer[Organism], listView: ListView[O
       println(s"Selected: ${listView.getSelectionModel.getSelectedItem.display}")
     }
   })
-  listView.cellFactory = (cell: ListCell[Organism], organism: Organism) => cell.text = organism.display
+  listView.cellFactory = (cell: ListCell[Organism[?]], organism: Organism[?]) => cell.text = organism.display
   
   def eventEmitters: Seq[EventEmitter] = Seq()
   val eventHandlers = {
     case event: UpdateOrganismDisplay =>
-    val organism: Organism = event.organism
+    val organism: Organism[?] = event.organism
     if(organismMap.contains(organism.id)){
       dataList.update(organismMap(organism.id), organism) // replace name with data to be displayed
     } else {

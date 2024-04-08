@@ -2,7 +2,13 @@ package ecoApp
 
 import model.Resources._
 
-case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var stems: Int = 1) extends Organism {
+sealed trait PlantComponent extends OrganismComponent
+case object Leaf extends PlantComponent
+case object Root extends PlantComponent
+case object Stem extends PlantComponent
+case object Seed extends PlantComponent
+
+case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var stems: Int = 1) extends Organism[Plant] {
 
   def aboveGroundWeight: Int = stems * 2 + leaves
   def rootStrength: Int = roots * 2
@@ -33,6 +39,15 @@ case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var ste
     frequency = 1000, 
     eventGenerator = time => Grow(this.id)
   )
+
+  def growLeaf: Event = {
+    SpendResources(
+      targetId = this.id,
+      resources = Map[OrganismResource[?], Int](Nutrient -> 10, Starch -> 25),
+      resultingEvents = Seq(),
+      sender = this,
+    )
+  }
   
   override def eventEmitters = super.eventEmitters :++ Seq(checkWater, extractNutrients)
 
@@ -48,6 +63,9 @@ case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var ste
         // growRoot
       }
       Seq()
+    }
+    case InsufficientResources(targetId, insufficientResources, failedEvents) => {
+      ???
     }
     case ProduceSugar(_) => {
       ???

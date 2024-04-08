@@ -10,7 +10,7 @@ case class SearchForPlant(senderId: Long) extends Event {
   override val targetId = Entities.entityManager
   println("Searching for plant")
 }
-case class Animal(birthday: Int) extends Organism {
+case class Animal(birthday: Int) extends Organism[Animal] {
   
   var targetPlant: Option[Long] = None
   

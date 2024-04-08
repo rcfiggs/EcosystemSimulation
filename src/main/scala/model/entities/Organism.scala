@@ -3,19 +3,23 @@ package ecoApp
 import scala.collection.mutable.Map
 import model.Resources.OrganismResource
 import model.Resources._
+import scala.collection.immutable
 
-trait Organism extends Entity {
+trait OrganismComponent
+
+trait Organism[O <: Organism[O]] extends Entity {
   
   val id: Long = Entities.newId
   val birthday: Int
-  val resources = Map[OrganismResource, Int]()
+  val resources = Map[OrganismResource[O], Int]()
+  val components = Map[OrganismComponent, Int]()
   resources.addAll(Seq(
   (Water, 100),
   (Energy, 25),
   (Nutrient, 25)
   ))
   
-  val waterLossEmitter = TimedEmitter[ResourceLost[OrganismResource]] (
+  val waterLossEmitter = TimedEmitter[ResourceLost[OrganismResource[?]]] (
   frequency = 1000,
   eventGenerator = (time) => ResourceLost(targetId = this.id, resource = Water, amount = 1)
   )
@@ -25,7 +29,7 @@ trait Organism extends Entity {
   )
   
   def eventHandlers: PartialFunction[Event, Seq[Event]] = {
-    case ResourceLost(_, resource: OrganismResource, amount) => {
+    case ResourceLost(_, resource: OrganismResource[O], amount) => {
       val cur = resources(resource)
       resources.update(resource, cur - (cur min amount))
       (resource match {
@@ -33,19 +37,19 @@ trait Organism extends Entity {
         case _ => Seq()
       }) :+ UpdateOrganismDisplay(this)
     }
-    case ResourceGain(_, resource: OrganismResource, amount) => {
+    case ResourceGain(_, resource: OrganismResource[O], amount) => {
       val cur = resources(resource)
       resources.update(resource, cur + amount)
       Seq(UpdateOrganismDisplay(this))
     }
-    case ExtractResource(_, resource: OrganismResource, amount, sender) => {
+    case ExtractResource(_, resource: OrganismResource[O], amount, sender) => {
       val deliverable = resources(resource) min amount
       Seq(
       ResourceLost(targetId = this.id, resource = resource, amount = deliverable),
       ResourceGain(targetId = sender.id, resource = resource, amount = deliverable),
       )
     }
-    case SpendResource(_, resource, amount, resultingEvent, sender) => {
+    case SpendResource(_, resource: OrganismResource[O], amount, resultingEvent, sender) => {
       val cur = resources(resource)
       if (cur >= amount) {
         resources.update(resource, cur - amount)
@@ -54,7 +58,7 @@ trait Organism extends Entity {
         Seq()
       }
     }
-    case SpendResources(targetId, requiredResources, resultingEvents, sender) => {
+    case SpendResources(targetId, requiredResources: immutable.Map[OrganismResource[O], Int], resultingEvents, sender) => {
       val (sufficient, insufficient) = requiredResources.partition { case (resource, amount) => resources(resource) >= amount }
 
       if (insufficient.isEmpty) {
@@ -81,14 +85,14 @@ case class ResourceLost[R <: Resource](targetId: Long, resource: R, amount: Int)
 
 case class ResourceGain[R <: Resource](targetId: Long, resource: R, amount: Int) extends Event
 
-case class ExtractResource[R <: Resource](targetId: Long, resource: R, amount: Int, sender: Organism) extends Event
+case class ExtractResource[R <: Resource](targetId: Long, resource: R, amount: Int, sender: Organism[?]) extends Event
 
-case class SpendResources(targetId: Long, resources: Map[OrganismResource, Int], resultingEvents: Seq[Event] = Seq.empty, sender: Organism) extends Event
-case class SpendResource(targetId: Long, resource: OrganismResource, amount: Int, resultingEvent: Event, sender: Organism) extends Event
+case class SpendResources(targetId: Long, resources: immutable.Map[OrganismResource[?], Int], resultingEvents: Seq[Event] = Seq.empty, sender: Organism[?]) extends Event
+case class SpendResource(targetId: Long, resource: OrganismResource[?], amount: Int, resultingEvent: Event, sender: Organism[?]) extends Event
 
-case class InsufficientResources(targetId: Long, insufficientResources: Map[OrganismResource, Int], failedEvents: Seq[Event]) extends Event
+case class InsufficientResources(targetId: Long, insufficientResources: immutable.Map[OrganismResource[?], Int], failedEvents: Seq[Event]) extends Event
 
-case class Perished(organism: Organism) extends Event{
+case class Perished(organism: Organism[?]) extends Event{
   override val targetId = Entities.entityManager
 }
 
