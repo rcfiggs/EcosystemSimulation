@@ -2,25 +2,29 @@ package ecoApp
 
 import scala.collection.mutable.Map
 import model.Resources.OrganismResource
-import model.Resources
+import model.Resources._
 import scala.collection.immutable
 
 trait OrganismComponent
 
 trait Organism[O <: Organism[O]] extends Entity {
+  case object Water extends Water[O]
+  case object Energy extends Energy[O]
+  case object Nutrient extends Nutrient[O]
+  
   val id: Long = Entities.newId
   val birthday: Int
   val components = Map[OrganismComponent, Int]()
   val resources = Map[OrganismResource[O], Int]()
   resources.addAll(Seq(
   (Water, 100),
-  (Energy[O](), 25),
-  (Nutrient[O](), 25)
+  (Energy, 25),
+  (Nutrient, 25)
   ))
   
   val waterLossEmitter = TimedEmitter[ResourceLost[OrganismResource[?]]] (
   frequency = 1000,
-  eventGenerator = (time) => ResourceLost(targetId = this.id, resource = Water[O](), amount = 1)
+  eventGenerator = (time) => ResourceLost(targetId = this.id, resource = Water, amount = 1)
   )
   
   def eventEmitters: Seq[EventEmitter] = Seq(
@@ -32,7 +36,7 @@ trait Organism[O <: Organism[O]] extends Entity {
       val cur = resources(resource)
       resources.update(resource, cur - (cur min amount))
       (resource match {
-        case Water if (resources(Water[O]()) <= 0) => Seq(Perished(this))
+        case Water if (resources(Water) <= 0) => Seq(Perished(this))
         case _ => Seq()
       }) :+ UpdateOrganismDisplay(this)
     }
