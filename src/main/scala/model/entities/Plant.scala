@@ -8,8 +8,9 @@ case object Root extends PlantComponent
 case object Stem extends PlantComponent
 case object Seed extends PlantComponent
 
-case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var stems: Int = 1) extends Organism[Plant] {
+case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var stems: Int = 1) extends Organism {
 
+  type O = Plant
   def aboveGroundWeight: Int = stems * 2 + leaves
   def rootStrength: Int = roots * 2
   def leafSupport: Int = stems * 2

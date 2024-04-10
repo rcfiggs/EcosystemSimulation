@@ -8,10 +8,10 @@ import scala.collection.immutable
 trait OrganismComponent
 
 trait Organism[O <: Organism[O]] extends Entity {
-  case object Water extends Water[O]
-  case object Energy extends Energy[O]
-  case object Nutrient extends Nutrient[O]
-  
+  // case object Water extends Water[O]
+  // case object Energy extends Energy[O]
+  // case object Nutrient extends Nutrient[O]
+
   val id: Long = Entities.newId
   val birthday: Int
   val components = Map[OrganismComponent, Int]()
@@ -22,7 +22,7 @@ trait Organism[O <: Organism[O]] extends Entity {
   (Nutrient, 25)
   ))
   
-  val waterLossEmitter = TimedEmitter[ResourceLost[OrganismResource[?]]] (
+  val waterLossEmitter = TimedEmitter[ResourceLost[OrganismResource[O]]] (
   frequency = 1000,
   eventGenerator = (time) => ResourceLost(targetId = this.id, resource = Water, amount = 1)
   )
