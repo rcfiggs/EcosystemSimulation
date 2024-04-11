@@ -21,8 +21,8 @@ object SimpleApp extends JFXApp3 {
   val gameState: GameState = new GameState()
   
   override def start(): Unit = {
-    val dataList = ObservableBuffer[Organism[?]]()
-    val listView = new ListView[Organism[?]](dataList)
+    val dataList = ObservableBuffer[Organism]()
+    val listView = new ListView[Organism](dataList)
     gameState.addEntity(OrganismDisplay(dataList, listView))
     val environment = Environment
     gameState.addEntity(environment)

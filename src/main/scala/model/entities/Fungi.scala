@@ -1,4 +1,4 @@
 package ecoApp
 
-case class Fungi(birthday: Int) extends Organism[Fungi] {
+case class Fungi(birthday: Int) extends Organism {
 }

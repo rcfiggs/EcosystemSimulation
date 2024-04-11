@@ -15,7 +15,7 @@ case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var ste
   def rootStrength: Int = roots * 2
   def leafSupport: Int = stems * 2
   
-  val checkWater = ConditionalEmitter[ExtractResource[EnvironmentalResource]](
+  val checkWater = ConditionalEmitter[ExtractResource](
     condition = () => (resources(Water) < 95),
     eventGenerator = (_) => Some(ExtractResource(targetId = Entities.environment, amount = 100 - resources(Water), sender = this, resource = Water))
   )
@@ -44,7 +44,7 @@ case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var ste
   def growLeaf: Event = {
     SpendResources(
       targetId = this.id,
-      resources = Map[OrganismResource[?], Int](Nutrient -> 10, Starch -> 25),
+      resources = Map[Resource, Int](Nutrient -> 10, Starch -> 25),
       resultingEvents = Seq(),
       sender = this,
     )

@@ -13,7 +13,7 @@ class EndDayButton(gameState: GameState, button: Button) extends Entity {
   val eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case event: ButtonPressed => {
       gameState.entities.values.collect {
-        case organism: Organism[?] => EndDay(organism)
+        case organism: Organism => EndDay(organism)
       }.toSeq
     }
     case _ => Seq[Event]()

@@ -10,7 +10,7 @@ case class SearchForPlant(senderId: Long) extends Event {
   override val targetId = Entities.entityManager
   println("Searching for plant")
 }
-case class Animal(birthday: Int) extends Organism[Animal] {
+case class Animal(birthday: Int) extends Organism {
   var targetPlant: Option[Long] = None
   
   val checkPlant = ConditionalEmitter[SearchForPlant](
@@ -18,7 +18,7 @@ case class Animal(birthday: Int) extends Organism[Animal] {
   eventGenerator = (_) => Some(SearchForPlant(this.id))
   )
   
-  val checkWater = ConditionalEmitter[ExtractResource[OrganismResource[?]]](
+  val checkWater = ConditionalEmitter[ExtractResource](
   condition = () => targetPlant.isDefined && resources(Water) < 80,
   eventGenerator = (_) => targetPlant match {
     case Some(plantId) => Some(ExtractResource(resource = Water, targetId = plantId, amount = 100 - resources(Water), sender = this))

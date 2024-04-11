@@ -19,7 +19,7 @@ case class DeliverNutrients(override val targetId: Long, amount: Int) extends Ev
 case object Environment extends Entity {
   val id: Long = Entities.environment
   val maxWaterInSoil: Int = 100
-  val resources = Map[EnvironmentalResource, Int]()
+  val resources = Map[Resource, Int]()
   resources.addAll(Seq(
     (Water, 100),
     (Nutrient, 100)
@@ -43,7 +43,7 @@ case object Environment extends Entity {
         Seq(UpdateEnviornmentDisplay("Water", resources(Water).toString))
       }
     }
-    case ExtractResource(_, resource: EnvironmentalResource, amount, sender) => {
+    case ExtractResource(_, resource, amount, sender) => {
       val deliverable = resources(resource) min amount
       resources.update(resource, resources(resource) - deliverable)
       Seq(resource match {
