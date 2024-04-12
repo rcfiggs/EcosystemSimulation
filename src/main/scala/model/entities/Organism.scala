@@ -10,7 +10,7 @@ trait Organism extends Entity {
 
   val id: Long = Entities.newId
   val birthday: Int
-  val organs = Map[Organ, Int]()
+  // val organs = Map[Acquirer, Int]()
   val resources = Map[Resource, Int]()
   resources.addAll(Seq(
   (Water, 100),

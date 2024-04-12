@@ -4,10 +4,31 @@ sealed trait Resource{
   def name: String
 }
 
-sealed trait SimpleResource(val name: String) extends Resource
 
+sealed trait NaturalResource extends Resource
+sealed trait SimpleResource(val name: String) extends Resource
 sealed trait CompoundResource(override val name: String, components: Map[Resource, Int], enzyme: Enzyme) extends Resource
 
+// Simple and Natural Resources
+case object Water extends NaturalResource with SimpleResource("Water")
+case object Nutrient extends NaturalResource with SimpleResource("Nutrient")
+case object Energy extends SimpleResource("Energy")
+case object Sunlight extends NaturalResource with CompoundResource(name = "Sunlight",
+components = Map(Energy -> 5),
+enzyme = Sunase)
+
+// Compound Resources
+case object Starch extends CompoundResource(name = "Starch",
+components = Map[Resource, Int](Sugar -> 2, Energy -> 1),
+enzyme = Starase)
+case object Sugar extends CompoundResource(name = "Sugar",
+components = Map[Resource, Int](Water -> 1, Energy -> 5),
+enzyme = Sugase)
+case object Fat extends CompoundResource(name = "Fat",
+components = Map[Resource, Int](Sugar -> 5, Energy -> 4, Nutrient -> 4),
+enzyme = Fatase)
+
+// Enzymes
 class Enzyme(name: String, components: Map[Resource, Int]) extends CompoundResource(name = name, components = components, enzyme = Enzase)
 
 case object Enzase extends Enzyme(name = "Enzase", 
@@ -28,21 +49,12 @@ components = Map[Resource,Int](Fat -> 10, Starch -> 10, Energy -> 20))
 case object Gathase extends Enzyme(name = "Gathase", 
 components = Map[Resource, Int](Fat -> 10, Starch -> 10, Energy -> 20))
 
-// Simple Resources
-case object Water extends SimpleResource("Water")
-case object Nutrient extends SimpleResource("Nutrient")
-case object Energy extends SimpleResource("Energy")
+case object Cellulase extends Enzyme(name = "Cellulase",
+components = Map[Resource, Int](Nutrient -> 5, Energy -> 3))
 
-// Compound Resources
-case object Starch extends CompoundResource(name = "Starch",
-components = Map[Resource, Int](Sugar -> 2, Energy -> 1),
-enzyme = Starase)
-case object Sugar extends CompoundResource(name = "Sugar",
-components = Map[Resource, Int](Water -> 1, Energy -> 5),
-enzyme = Sugase)
-case object Fat extends CompoundResource(name = "Fat",
-components = Map[Resource, Int](Sugar -> 5, Energy -> 4, Nutrient -> 4),
-enzyme = Fatase)
+case object Sunase extends Enzyme(name = "Sunase",
+components = Map(Nutrient -> 1))
+
 
 // Resource Acquirers
 sealed trait Acquirer {
@@ -66,7 +78,7 @@ components = Map[Resource, Int](Energy -> 3, Sugar -> 3, Nutrient -> 4))
 
 class Gatherer(
   name: String, 
-  override val resource: SimpleResource, 
+  override val resource: NaturalResource, 
   components: Map[Resource, Int]
 ) extends Acquirer with CompoundResource(
   name = name, 
@@ -74,9 +86,9 @@ class Gatherer(
   enzyme = Gathase
 )
 
-case object Enode extends Gatherer(
-  name = "Enode",
-  resource = Energy,
+case object Sunode extends Gatherer(
+  name = "Sunode",
+  resource = Sunlight,
   components =  Map[Resource, Int](Starch -> 3, Nutrient -> 3),
 )
 
@@ -90,4 +102,13 @@ case object Nutrode extends Gatherer (
   name = "Nutrode",
   resource = Nutrient,
   components = Map[Resource, Int](Starch -> 3, Energy -> 1, Water -> 1)
+)
+
+// Structural Resources
+sealed trait Structure
+
+case object Cellulose extends Structure with CompoundResource(
+  name = "Cellulose",
+  components = Map[Resource, Int](Sugar -> 2, Energy -> 1),
+  enzyme = Cellulase
 )
