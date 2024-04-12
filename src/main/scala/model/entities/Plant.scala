@@ -10,11 +10,16 @@ case object Seed extends PlantComponent
 
 case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var stems: Int = 1) extends Organism {
 
-  type O = Plant
   def aboveGroundWeight: Int = stems * 2 + leaves
   def rootStrength: Int = roots * 2
   def leafSupport: Int = stems * 2
-  
+  organs.addAll(List(
+    Enode -> 2,
+    Watode -> 2,
+    Nutrode -> 2,
+    Suganor -> 2,
+    Starchanor -> 1,
+  ))  
   val checkWater = ConditionalEmitter[ExtractResource](
     condition = () => (resources(Water) < 95),
     eventGenerator = (_) => Some(ExtractResource(targetId = Entities.environment, amount = 100 - resources(Water), sender = this, resource = Water))

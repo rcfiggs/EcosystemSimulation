@@ -7,13 +7,10 @@ import scala.collection.immutable
 trait OrganismComponent
 
 trait Organism extends Entity {
-  // case object Water extends Water[O]
-  // case object Energy extends Energy[O]
-  // case object Nutrient extends Nutrient[O]
 
   val id: Long = Entities.newId
   val birthday: Int
-  val components = Map[OrganismComponent, Int]()
+  val organs = Map[Organ, Int]()
   val resources = Map[Resource, Int]()
   resources.addAll(Seq(
   (Water, 100),
