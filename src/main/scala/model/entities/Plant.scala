@@ -19,7 +19,6 @@ case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var ste
     Nutrode -> 2,
     Suganor -> 2,
     Starchanor -> 1,
-    Sunase -> 1
   ))
   val checkWater = ConditionalEmitter[ExtractResource](
     condition = () => (resources(Water) < 95),
