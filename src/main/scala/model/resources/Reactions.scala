@@ -3,25 +3,25 @@ package model.Resources
 sealed trait Reaction {
   def name: String
   def reactants: Map[Resource, Int]
-  def products: Map[Compound | Resource, Int]
+  def products: Map[Resource, Int]
 }
 
-sealed class SimpleSynthesis(resource: Compound) extends Reaction {
+sealed class SimpleSynthesis(resource: CompoundResource) extends Reaction {
   override val name = s"Synthesize ${resource.getClass.getSimpleName}"
   override val reactants = resource.components
   override val products = Map(resource -> 1)
 }
 
-sealed class SimpleMetabolism(resource: Compound & Resource, enzyme: Enzyme) extends Reaction {
+sealed class SimpleMetabolism(resource: CompoundResource, enzyme: Enzyme) extends Reaction {
   override val name = s"Metabolize ${resource.getClass.getSimpleName}"
   override val reactants = Map(resource -> 1, enzyme -> 1)
-  override val products = Map() ++ resource.components + (enzyme -> 1)
+  override val products = resource.components + (enzyme -> 1)
 }
 
-sealed class MetabolizeEnzyme(resource: Compound & Resource) 
+sealed class MetabolizeEnzyme(resource: CompoundResource) 
   extends SimpleMetabolism(resource = resource, enzyme = Enzase)
 
-sealed class MetabolizeGatherer(resource: Compound)
+sealed class MetabolizeGatherer(resource: CompoundResource)
   extends SimpleMetabolism(resource = resource, enzyme = Gathase)
 
 case object Photosynthesize extends Reaction {
