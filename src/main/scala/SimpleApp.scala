@@ -54,7 +54,7 @@ object SimpleApp extends JFXApp3 {
     gameState.addEntity(EnvironmentDisplay(environmentData, environmentList))
     gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay("Water", environment.resources(Water).toString))
     gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay("Nutrient", environment.resources(Nutrient).toString))
-
+    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay("Sunlight", environment.resources(Sunlight).toString))
     val vbox = new VBox(10) {
       children = Seq(Text("Environment"), environmentList, Text("Organisms"), listView, endDayButton, organismChoice, createOrganismButton)
     }

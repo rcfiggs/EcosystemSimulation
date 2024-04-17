@@ -1,13 +1,14 @@
 package ecoApp
 
 import scala.collection.mutable.Map
+import scala.collection.mutable.Set
 import model.Resources._
 import scala.collection.immutable
 
 trait OrganismComponent
 
 trait Organism extends Entity {
-
+  
   val id: Long = Entities.newId
   val birthday: Int
   // val organs = Map[Acquirer, Int]()
@@ -19,18 +20,63 @@ trait Organism extends Entity {
   (Nutrient, 25)
   ))
   
-  val waterLossEmitter = TimedEmitter[ResourceLost] (
+  val processReactions = TimedEmitter[React] (
   frequency = 1000,
+  eventGenerator = (time) => React(targetId = this.id)
+  )
+  
+  val waterLossEmitter = TimedEmitter[ResourceLost] (
+  frequency = 5000,
   eventGenerator = (time) => ResourceLost(targetId = this.id, resource = Water, amount = 1)
   )
   
   def eventEmitters: Seq[EventEmitter] = Seq(
+  processReactions,
   waterLossEmitter,
   )
   
   def eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case React(_) => {
+      reactions.toSeq.flatMap(reaction => {
+        // Check if we have enough resources to execute reaction
+        if(reaction.reactants.forall{ 
+          (resource, quantity) => resources.getOrElse(resource, 0) >= quantity 
+        }) {
+          reaction match {
+            case Gather(gatherer: Gatherer) => {
+              Seq(ExtractResource(
+              targetId = Entities.environment,
+              resource = gatherer.resource,
+              amount = 1,
+              sender = this
+              ))
+            }
+            case SimpleMetabolism(resource, enzyme) => {
+              val reactantsWithoutEnzyme = reaction.reactants - enzyme
+              val productsWithoutEnzyme = reaction.products - enzyme
+              Seq(SpendResources(
+                targetId = this.id,
+                resources = reactantsWithoutEnzyme,
+                resultingEvents = productsWithoutEnzyme.map { case (resource, amount) => ResourceGain(this.id, resource, amount) }.toSeq,
+                sender = this
+              ))
+            }
+            case _ => {
+              Seq(SpendResources(
+              targetId = this.id,
+              resources = reaction.reactants,
+              resultingEvents = reaction.products.map { case (resource, amount) => ResourceGain(this.id, resource, amount) }.toSeq,
+              sender = this
+              ))
+            }
+          }
+        } else {
+          Seq()
+        }
+      })
+    }
     case ResourceLost(_, resource: Resource, amount) => {
-      val cur = resources(resource)
+      val cur = resources.getOrElse(resource, 0)
       resources.update(resource, cur - (cur min amount))
       (resource match {
         case Water if (resources(Water) <= 0) => Seq(Perished(this))
@@ -38,7 +84,7 @@ trait Organism extends Entity {
       }) :+ UpdateOrganismDisplay(this)
     }
     case ResourceGain(_, resource: Resource, amount) => {
-      val cur = resources(resource)
+      val cur = resources.getOrElse(resource, 0)
       resources.update(resource, cur + amount)
       Seq(UpdateOrganismDisplay(this))
     }
@@ -60,7 +106,7 @@ trait Organism extends Entity {
     }
     case SpendResources(targetId, requiredResources: immutable.Map[Resource, Int], resultingEvents, sender) => {
       val (sufficient, insufficient) = requiredResources.partition { case (resource, amount) => resources(resource) >= amount }
-
+      
       if (insufficient.isEmpty) {
         sufficient.foreach { case (resource, amount) => 
           val cur = resources(resource)
@@ -70,16 +116,18 @@ trait Organism extends Entity {
       } else {
         // Handle insufficient resources, maybe generate a different event or log
         Seq(InsufficientResources(
-          targetId = sender.id, 
-          insufficientResources = insufficient,
-          failedEvents = resultingEvents 
+        targetId = sender.id, 
+        insufficientResources = insufficient,
+        failedEvents = resultingEvents 
         ))
       }
     }
   }
   
-  def display: String = s"${this.getClass.getSimpleName}: Energy: ${resources(Energy)}, Hydration: ${resources(Water)}, Nutrients: ${resources(Nutrient)}"
+  def display: String = s"${this.getClass.getSimpleName}: ${resources.toString}"
 }
+
+case class React(targetId: Long) extends Event
 
 case class ResourceLost(targetId: Long, resource: Resource, amount: Int) extends Event
 

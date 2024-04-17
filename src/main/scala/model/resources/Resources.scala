@@ -35,7 +35,7 @@ case object Starchase extends Enzyme(
 components = Map[Resource, Int](Sugar -> 2, Energy -> 1, Nutrient -> 1))
 
 case object Sugase extends Enzyme(
-components = Map[Resource, Int](Energy -> 1, Nutrient -> 2))
+components = Map[Resource, Int](Energy -> 1, Nutrient -> 2, Cellulose -> 3))
 
 case object Fatase extends Enzyme(
 components = Map[Resource, Int](Starch -> 2, Energy -> 1, Nutrient -> 3))

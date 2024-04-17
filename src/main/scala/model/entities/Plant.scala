@@ -17,8 +17,9 @@ case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var ste
     Sunode -> 2,
     Watode -> 2,
     Nutrode -> 2,
+    Sugase -> 1,
   ))
-  reactions ++ Seq(
+  reactions ++= Seq(
     Photosynthesize,
     SynthesizeStarch,
     SynthesizeSugar,
@@ -37,21 +38,21 @@ case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var ste
     eventGenerator = (_) => Some(ExtractResource(targetId = Entities.environment, amount = 100 - resources(Water), sender = this, resource = Water))
   )
   
-  val extractNutrients = ConditionalEmitter[SpendResource](
-    condition = () => resources(Nutrient) < 100 && resources(Energy) > 5,
-    eventGenerator = (_) => Some(SpendResource(
-      targetId = this.id, 
-      resource = Energy, 
-      amount = 5, 
-      sender = this,
-      resultingEvent = ExtractResource(
-        targetId = Entities.environment, 
-        resource = Nutrient,
-        amount = 10, // Or whatever amount you need
-        sender = this
-      ) 
-    ))
-  )
+  // val extractNutrients = ConditionalEmitter[SpendResource](
+  //   condition = () => resources(Nutrient) < 100 && resources(Energy) > 5,
+  //   eventGenerator = (_) => Some(SpendResource(
+  //     targetId = this.id, 
+  //     resource = Energy, 
+  //     amount = 5, 
+  //     sender = this,
+  //     resultingEvent = ExtractResource(
+  //       targetId = Entities.environment, 
+  //       resource = Nutrient,
+  //       amount = 10, // Or whatever amount you need
+  //       sender = this
+  //     ) 
+  //   ))
+  // )
 
   val growthEmitter = TimedEmitter(
     frequency = 1000, 
@@ -67,23 +68,23 @@ case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var ste
     )
   }
   
-  override def eventEmitters = super.eventEmitters :++ Seq(checkWater, extractNutrients)
+  override def eventEmitters = super.eventEmitters :++ Seq()
 
   override def eventHandlers: PartialFunction[Event, Seq[Event]] = {
-    case Grow(_) => {
-      if (aboveGroundWeight < rootStrength) {
-        if (leafSupport < leaves) {
-          // growLeaf
-        } else {
-          // growStem
-        }
-      } else {
-        // growRoot
-      }
-      Seq()
-    }
+    // case Grow(_) => {
+    //   if (aboveGroundWeight < rootStrength) {
+    //     if (leafSupport < leaves) {
+    //       // growLeaf
+    //     } else {
+    //       // growStem
+    //     }
+    //   } else {
+    //     // growRoot
+    //   }
+    //   Seq()
+    // }
     case InsufficientResources(targetId, insufficientResources, failedEvents) => {
-      ???
+      Seq()
     }
     case ProduceSugar(_) => {
       ???

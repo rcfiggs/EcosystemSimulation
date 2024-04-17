@@ -6,7 +6,7 @@ sealed trait Reaction {
   def products: Map[Resource, Int]
 }
 
-sealed class Gather(gatherer: Gatherer) extends Reaction {
+sealed case class Gather(gatherer: Gatherer) extends Reaction {
   override val name = s"Gather ${gatherer.resource.getClass.getSimpleName}"
   override val reactants = Map(gatherer -> 1)
   override val products = Map(gatherer -> 1, gatherer.resource -> 1)
@@ -18,7 +18,7 @@ sealed class SimpleSynthesis(resource: CompoundResource) extends Reaction {
   override val products = Map(resource -> 1)
 }
 
-sealed class SimpleMetabolism(resource: CompoundResource, enzyme: Enzyme) extends Reaction {
+sealed case class SimpleMetabolism(resource: CompoundResource, enzyme: Enzyme) extends Reaction {
   override val name = s"Metabolize ${resource.getClass.getSimpleName}"
   override val reactants = Map(resource -> 1, enzyme -> 1)
   override val products = resource.components + (enzyme -> 1)
@@ -36,41 +36,41 @@ case object Photosynthesize extends Reaction {
   override val products =  Map(Sugar -> 1)
 }
 
-case object MetabolizeStarch extends SimpleMetabolism(Starch, Starchase) 
+object MetabolizeStarch extends SimpleMetabolism(Starch, Starchase) 
 case object SynthesizeStarch extends SimpleSynthesis(Starch)
 
-case object MetabolizeSugar extends SimpleMetabolism(Sugar, Sugase)
+object MetabolizeSugar extends SimpleMetabolism(Sugar, Sugase)
 case object SynthesizeSugar extends SimpleSynthesis(Sugar)
 
-case object MetabolizeFat extends SimpleMetabolism(Fat, Fatase)
+object MetabolizeFat extends SimpleMetabolism(Fat, Fatase)
 case object SynthesizeFat extends SimpleSynthesis(Fat)
 
-case object MetabolizeCellulose extends SimpleMetabolism(Cellulose, Cellulase)
+object MetabolizeCellulose extends SimpleMetabolism(Cellulose, Cellulase)
 case object SynthesizeCellulose extends SimpleSynthesis(Cellulose)
 
-case object MetabolizeEnzase extends MetabolizeEnzyme(Enzase)
+object MetabolizeEnzase extends MetabolizeEnzyme(Enzase)
 case object SynthesizeEnzase extends SimpleSynthesis(Enzase)
 
-case object MetabolizeStarchase extends MetabolizeEnzyme(Starchase)
+object MetabolizeStarchase extends MetabolizeEnzyme(Starchase)
 case object SynthesizeStarchase extends SimpleSynthesis(Starchase)
 
-case object MetabolizeSugase extends MetabolizeEnzyme(Sugase)
+object MetabolizeSugase extends MetabolizeEnzyme(Sugase)
 case object SynthesizeSugase extends SimpleSynthesis(Sugase)
 
-case object MetabolizeFatase extends MetabolizeEnzyme(Fatase)
+object MetabolizeFatase extends MetabolizeEnzyme(Fatase)
 case object SynthesizeFatase extends SimpleSynthesis(Fatase)
 
-case object MetabolizeCellulase extends MetabolizeEnzyme(Cellulase)
+object MetabolizeCellulase extends MetabolizeEnzyme(Cellulase)
 case object SynthesizeCellulase extends SimpleSynthesis(Cellulase)
 
-case object MetabolizeSunode extends MetabolizeGatherer(Sunode)
+object MetabolizeSunode extends MetabolizeGatherer(Sunode)
 case object SynthesizeSunode extends SimpleSynthesis(Sunode)
-case object GatherSunlight extends Gather(Sunode)
+object GatherSunlight extends Gather(Sunode)
 
-case object MetabolizeWatode extends MetabolizeGatherer(Watode)
+object MetabolizeWatode extends MetabolizeGatherer(Watode)
 case object SynthesizeWatode extends SimpleSynthesis(Watode)
-case object GatherWater extends Gather(Watode)
+object GatherWater extends Gather(Watode)
 
-case object MetabolizeNutrode extends MetabolizeGatherer(Nutrode)
+object MetabolizeNutrode extends MetabolizeGatherer(Nutrode)
 case object SynthesizeNutrode extends SimpleSynthesis(Nutrode)
-case object GatherNutrient extends Gather(Nutrode)
+object GatherNutrient extends Gather(Nutrode)

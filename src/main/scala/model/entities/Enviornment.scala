@@ -22,7 +22,8 @@ case object Environment extends Entity {
   val resources = Map[Resource, Int]()
   resources.addAll(Seq(
     (Water, 100),
-    (Nutrient, 100)
+    (Nutrient, 100),
+    (Sunlight, Int.MaxValue)
   ))
 
   val rainfallEmitter = TimedEmitter(
@@ -49,6 +50,7 @@ case object Environment extends Entity {
       Seq(resource match {
         case Water => UpdateEnviornmentDisplay("Water", resources(Water).toString)
         case Nutrient => UpdateEnviornmentDisplay("Nutrient", resources(Nutrient).toString)
+        case Sunlight => UpdateEnviornmentDisplay("Sunlight", resources(Sunlight).toString)
         case _ => ???
       }) :+ ResourceGain(targetId = sender.id, resource = resource, amount = deliverable)
     }
