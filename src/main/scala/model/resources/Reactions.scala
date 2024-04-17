@@ -6,6 +6,12 @@ sealed trait Reaction {
   def products: Map[Resource, Int]
 }
 
+sealed class Gather(gatherer: Gatherer) extends Reaction {
+  override val name = s"Gather ${gatherer.resource.getClass.getSimpleName}"
+  override val reactants = Map(gatherer -> 1)
+  override val products = Map(gatherer -> 1, gatherer.resource -> 1)
+}
+
 sealed class SimpleSynthesis(resource: CompoundResource) extends Reaction {
   override val name = s"Synthesize ${resource.getClass.getSimpleName}"
   override val reactants = resource.components
@@ -59,9 +65,12 @@ case object SynthesizeCellulase extends SimpleSynthesis(Cellulase)
 
 case object MetabolizeSunode extends MetabolizeGatherer(Sunode)
 case object SynthesizeSunode extends SimpleSynthesis(Sunode)
+case object GatherSunlight extends Gather(Sunode)
 
 case object MetabolizeWatode extends MetabolizeGatherer(Watode)
 case object SynthesizeWatode extends SimpleSynthesis(Watode)
+case object GatherWater extends Gather(Watode)
 
 case object MetabolizeNutrode extends MetabolizeGatherer(Nutrode)
 case object SynthesizeNutrode extends SimpleSynthesis(Nutrode)
+case object GatherNutrient extends Gather(Nutrode)

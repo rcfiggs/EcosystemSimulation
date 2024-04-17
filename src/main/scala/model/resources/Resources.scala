@@ -50,7 +50,7 @@ case object Cellulase extends Enzyme(
 components = Map[Resource, Int](Nutrient -> 5, Energy -> 3))
 
 sealed class Gatherer(
-  resource: NaturalResource,
+  val resource: NaturalResource,
   components: Map[Resource, Int]
 ) extends CompoundResource(
   components = components, 
