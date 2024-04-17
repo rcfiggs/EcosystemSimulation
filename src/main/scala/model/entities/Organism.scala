@@ -37,14 +37,16 @@ trait Organism extends Entity {
   
   def eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case React(_) => {
-      reactions.toSeq.flatMap(reaction => {
-        // Check if we have enough resources to execute reaction
-        if(reaction.reactants.forall{ 
-          (resource, quantity) => resources.getOrElse(resource, 0) >= quantity 
-        }) {
+      scala.util.Random.shuffle(reactions.toSeq).flatMap(reaction => {
+        // Calculate the maximum number of times the reaction can be executed
+        val maxExecutions = reaction.reactants.map { 
+          case (resource, quantity) => resources.getOrElse(resource, 0) / quantity 
+        }.min
+        
+        if(maxExecutions > 0) {
           reaction match {
             case Gather(gatherer: Gatherer) => {
-              Seq(ExtractResource(
+              Seq.fill(maxExecutions)(ExtractResource(
               targetId = Entities.environment,
               resource = gatherer.resource,
               amount = 1,
@@ -55,17 +57,17 @@ trait Organism extends Entity {
               val reactantsWithoutEnzyme = reaction.reactants - enzyme
               val productsWithoutEnzyme = reaction.products - enzyme
               Seq(SpendResources(
-                targetId = this.id,
-                resources = reactantsWithoutEnzyme,
-                resultingEvents = productsWithoutEnzyme.map { case (resource, amount) => ResourceGain(this.id, resource, amount) }.toSeq,
-                sender = this
+              targetId = this.id,
+              resources = reactantsWithoutEnzyme.mapValues(_ * maxExecutions).toMap,
+              resultingEvents = productsWithoutEnzyme.map { case (resource, amount) => ResourceGain(this.id, resource, amount * maxExecutions) }.toSeq,
+              sender = this
               ))
             }
             case _ => {
               Seq(SpendResources(
               targetId = this.id,
-              resources = reaction.reactants,
-              resultingEvents = reaction.products.map { case (resource, amount) => ResourceGain(this.id, resource, amount) }.toSeq,
+              resources = reaction.reactants.mapValues(_ * maxExecutions).toMap,
+              resultingEvents = reaction.products.map { case (resource, amount) => ResourceGain(this.id, resource, amount * maxExecutions) }.toSeq,
               sender = this
               ))
             }
