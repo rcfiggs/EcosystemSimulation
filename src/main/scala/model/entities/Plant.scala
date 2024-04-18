@@ -19,20 +19,6 @@ case class Plant(birthday: Int, var roots: Int = 1, var leaves: Int = 2, var ste
     Nutrode -> 2,
     Sugase -> 1,
   ))
-  reactions ++= Seq(
-    MetabolizeSugar,
-    SynthesizeSugar,
-    SynthesizeSunode,
-    SynthesizeWatode,
-    SynthesizeNutrode,
-    SynthesizeCellulose,
-    SynthesizeSugase,
-    // SynthesizeStarch,
-    Photosynthesize,
-    GatherSunlight,
-    GatherWater,
-    GatherNutrient,
-  )
   val checkWater = ConditionalEmitter[ExtractResource](
     condition = () => (resources(Water) < 95),
     eventGenerator = (_) => Some(ExtractResource(targetId = Entities.environment, amount = 100 - resources(Water), sender = this, resource = Water))
