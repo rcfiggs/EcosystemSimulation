@@ -1,6 +1,7 @@
 package ecoApp
 
 import scalafx.scene.control.Button
+import model.Resources._
 
 class EndDayButton(gameState: GameState, button: Button) extends Entity {
   override val id = Entities.endDayButton
@@ -12,9 +13,11 @@ class EndDayButton(gameState: GameState, button: Button) extends Entity {
   
   val eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case event: ButtonPressed => {
-      gameState.entities.values.collect {
-        case organism: Organism => EndDay(organism)
-      }.toSeq
+      Seq(SpendResources(
+        targetId = 7L,
+        resources = Map(Starch -> 1),
+        resultingEvents = Seq(ResourceGain(7L, Cellulose, 1)),
+      ))
     }
     case _ => Seq[Event]()
   }

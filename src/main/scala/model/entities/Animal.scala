@@ -12,6 +12,10 @@ case class SearchForPlant(senderId: Long) extends Event {
 }
 case class Animal(birthday: Int) extends Organism {
   var targetPlant: Option[Long] = None
+
+  override val acquire = {
+    case _ => Seq()
+  }
   
   val checkPlant = ConditionalEmitter[SearchForPlant](
   condition = () => !targetPlant.isDefined,
