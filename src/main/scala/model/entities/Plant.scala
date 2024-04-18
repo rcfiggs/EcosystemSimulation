@@ -31,21 +31,21 @@ case class Plant(birthday: Int) extends Organism {
     resources = Map(Watode -> 1), 
     resultingEvents = Seq(
     ResourceGain(targetId = this.id, resource = Watode, amount = 1),
-    ResourceGain(targetId = this.id, resource = Water, amount = 1)
+    ExtractResource(targetId = Entities.environment, resource = Water, amount = 1, sender = this)
     ))
     case Nutrient => SpendResources(
     targetId = this.id,
     resources = Map(Nutrode -> 1), 
     resultingEvents = Seq(
     ResourceGain(targetId = this.id, resource = Nutrode, amount = 1),
-    ResourceGain(targetId = this.id, resource = Nutrient, amount = 1)
+    ExtractResource(targetId = Entities.environment, resource = Nutrient, amount = 1, sender = this)
     ))
     case Sunlight => SpendResources(
     targetId = this.id,
     resources = Map(Sunode -> 1), 
     resultingEvents = Seq(
     ResourceGain(targetId = this.id, resource = Sunode, amount = 1),
-    ResourceGain(targetId = this.id, resource = Sunlight, amount = 1)
+    ExtractResource(targetId = Entities.environment, resource = Sunlight, amount = 1, sender = this)
     ))
   }
   def metabolizeSugar = {
