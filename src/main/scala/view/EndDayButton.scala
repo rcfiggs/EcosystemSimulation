@@ -15,8 +15,8 @@ class EndDayButton(gameState: GameState, button: Button) extends Entity {
     case event: ButtonPressed => {
       Seq(SpendResources(
         targetId = 7L,
-        resources = Map(Starch -> 1),
-        resultingEvents = Seq(ResourceGain(7L, Cellulose, 1)),
+        resources = Map(Cellulose -> 1),
+        resultingEvents = Seq(CreateOrganism(() => Plant(0))),
       ))
     }
     case _ => Seq[Event]()

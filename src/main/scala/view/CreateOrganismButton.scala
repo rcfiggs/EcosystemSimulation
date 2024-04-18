@@ -14,9 +14,9 @@ class CreateOrganismButton(button: Button, choiceBox: ChoiceBox[String]) extends
     case event: ButtonPressed => {
       val organismType = choiceBox.getValue
       organismType match {
-        case "Plant" => Seq(CreateOrganism(new Plant(birthday = 0)))
-        case "Animal" => Seq(CreateOrganism(new Animal(birthday = 0)))
-        case "Fungi" => Seq(CreateOrganism(new Fungi(birthday = 0)))
+        case "Plant" => Seq(CreateOrganism(() => Plant(0)))
+        case "Animal" => Seq(CreateOrganism(() => Animal(0)))
+        case "Fungi" => Seq(CreateOrganism(() => Fungi(0)))
         case _ => Seq[Event]()
       }
     }
