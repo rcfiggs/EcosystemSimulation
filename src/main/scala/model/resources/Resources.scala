@@ -24,31 +24,6 @@ case object Fat extends Resource
 case object Cellulose extends Resource 
   with CompoundResource(components = Map[Resource, Int](Sugar -> 2, Energy -> 1))
 
-// Enzymes
-class Enzyme(components: Map[Resource, Int]) extends Resource 
-  with CompoundResource(components = components)
-
-case object Enzase extends Enzyme(
-  components = Map[Resource, Int](Fat -> 5, Starch -> 5, Energy -> 5, Nutrient -> 5))
-
-case object Starchase extends Enzyme(
-components = Map[Resource, Int](Sugar -> 2, Energy -> 1, Nutrient -> 1))
-
-case object Sugase extends Enzyme(
-components = Map[Resource, Int](Energy -> 1, Nutrient -> 2, Cellulose -> 3))
-
-case object Fatase extends Enzyme(
-components = Map[Resource, Int](Starch -> 2, Energy -> 1, Nutrient -> 3))
-
-case object Synthase extends Enzyme(
-components = Map[Resource,Int](Fat -> 10, Starch -> 10, Energy -> 20))
-
-case object Gathase extends Enzyme( 
-components = Map[Resource, Int](Fat -> 10, Starch -> 10, Energy -> 20))
-
-case object Cellulase extends Enzyme(
-components = Map[Resource, Int](Nutrient -> 5, Energy -> 3))
-
 sealed class Gatherer(
   val resource: NaturalResource,
   components: Map[Resource, Int]
