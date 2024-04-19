@@ -16,7 +16,10 @@ class GameState {
   def processFrame(time: Long): Unit = {
     for (entity <- entities.values) {
       val updateEvents = entity.update()
-      updateEvents.foreach(e => entities(e.targetId).events.enqueue(e))
+      updateEvents.foreach(e => {
+        entities(e.targetId).events.enqueue(e)
+      })
+      println(s"${entity.id}, ${entity.events.size}")
       
       val processEvents = entity.process(time)
       processEvents.foreach(e => entities(e.targetId).events.enqueue(e))
