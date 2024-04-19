@@ -58,6 +58,8 @@ case class Plant(birthday: Int) extends Organism {
     )
   }
   override val acquire = {
+    case resource: Gatherer => Seq(
+    )
     case resource: CompoundResource => resource match 
       case Sugar => Seq(SpendResources(
       targetId = this.id,
