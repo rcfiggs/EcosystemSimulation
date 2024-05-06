@@ -1,41 +1,136 @@
-package ecoApp
+package model.entities
 
-import scala.collection.mutable.Map
-import scala.collection.mutable.Set
-import model.Resources._
-import scala.collection.immutable
+import model.events.{
+  Event, ResourceLost, ExtractResource, ResourceGain, SpendResources, InsufficientResources,
+  FindTarget, TargetFound, TargetNotFound,
+  UpdateOrganismDisplay, Perished, IsPerished, Reproduce, CreateOrganism,
+  EventEmitter, TimedEmitter, ConditionalEmitter,
+  eventToSeq,
+}
+import model.resources.{
+  Resource, Water,
+  Conversion,
+}
+import model.dna.DNA
+import organisms.{Plant, Fungi, Animal}
 
-trait OrganismComponent
+import scala.collection.mutable
 
 trait Organism extends Entity {
-  
   val id: Long = Entities.newId
-  val birthday: Int
-  val acquire: PartialFunction[Resource, Seq[Event]]
-  val resources = Map[Resource, Int]()
-  resources.addAll(Seq(
-  (Water, 100),
-  (Energy, 25),
-  (Nutrient, 25)
-  ))
+  val initialResources: Map[Resource, Int]
+  val dna: DNA
+  var target: Option[Long] = None
   
-  val waterLossEmitter = TimedEmitter[ResourceLost] (
+  val resources = mutable.Map[Resource, Int]()
+  resources.addAll(initialResources)
+  val intakeRate: Map[Resource, Int] = dna.intake
+  val extractionRate: Map[Resource, Int] = dna.extraction
+  val synthesisRate: Map[Conversion, Int] = dna.synthesis
+  val resourceCapacities: Map[Resource, Int] = dna.capacity
+  
+  val waterLossEmitter = TimedEmitter(
   frequency = 5000,
   eventGenerator = (time) => ResourceLost(targetId = this.id, resource = Water, amount = 1)
   )
   
+  val collect = TimedEmitter(
+  frequency = 1000,
+  eventGenerator = (time) => {
+    val environmentalIntake = intakeRate.toSeq.flatMap { 
+      case (resource, amount) => {
+        val spaceAvailable = resourceCapacities.getOrElse(resource, Int.MaxValue) - resources.getOrElse(resource, 0)
+        val amountToCollect = amount min spaceAvailable
+        if (amountToCollect > 0) {
+          Seq(ExtractResource(targetId = Entities.environment, resource = resource, amount = amountToCollect, sender = this))
+        } else {
+          Seq()
+        }
+      } 
+    }
+    val targetedExtraction = extractionRate.toSeq.flatMap { 
+      case (resource, amount) => {
+        target match {
+          case Some(targetId) => {
+            val spaceAvailable = resourceCapacities.getOrElse(resource, Int.MaxValue) - resources.getOrElse(resource, 0)
+            val amountToCollect = amount min spaceAvailable
+            if (amountToCollect > 0) {
+              Seq(ExtractResource(targetId = targetId, resource = resource, amount = amountToCollect, sender = this))
+            } else {
+              Seq()
+            }
+          }
+          case None => Seq()
+        }
+      } 
+    }
+    environmentalIntake ++ targetedExtraction
+  }
+  )
+  
+  val findTarget = TimedEmitter(
+  frequency = 1000,
+  eventGenerator = (time) => this match {
+    case plant: Plant => FindTarget({case (_, o: Fungi) => o}, plant.id)
+    case animal: Animal => FindTarget({case (_, o: Plant) => o}, animal.id)
+    case fungi: Fungi => FindTarget({case (_, o: Animal) => o}, fungi.id)
+  }
+  )
+  
+  val synthesize = TimedEmitter(
+  frequency = 1000,
+  eventGenerator = (time) => {
+    synthesisRate.toSeq.flatMap { 
+      case(conv: Conversion, maxAmount) => {
+        val currentResourceAmounts = resources
+        val gainedAmount = conv.inputs.map { case (resource, quantity) => (currentResourceAmounts.getOrElse(resource, 0) - 1) / quantity }.min
+        val amount = gainedAmount min maxAmount
+        if (amount > 0) {
+          val spentResources = conv.inputs.map { case (resource, quantity) => resource -> quantity * amount }
+          val gainedResources = conv.outputs.map { case (resource, quantity) => resource -> quantity * amount }
+          
+          // Check if the organism has enough resources to spend
+          val canSpend = spentResources forall { case (resource, amount) => currentResourceAmounts.getOrElse(resource, 0) >= amount }
+          
+          // Check if the organism has enough capacity to hold the gained resources
+          val canHold = gainedResources forall { case (resource, amount) => resourceCapacities.getOrElse(resource, Int.MaxValue) >= currentResourceAmounts.getOrElse(resource, 0) + amount }
+          
+          if (canSpend && canHold) {
+            Seq(
+            SpendResources(
+            targetId = this.id, 
+            resources = spentResources,
+            resultingEvents = gainedResources.map { case (resource, amount) => ResourceGain(this.id, resource, amount) }.toSeq
+            )
+            )
+          } else {
+            Seq()
+          }
+        } else {
+          Seq()
+        }
+      }
+    }
+  }
+  )
+  
   def eventEmitters: Seq[EventEmitter] = Seq(
   waterLossEmitter,
+  synthesize,
+  collect,
+  findTarget,
   )
   
   def eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case ResourceLost(_, resource: Resource, amount) => {
       val cur = resources.getOrElse(resource, 0)
       resources.update(resource, cur - (cur min amount))
-      (resource match {
-        case Water if (resources.getOrElse(Water, 0) <= 0) => Seq(Perished(this))
-        case _ => Seq()
-      }) :+ UpdateOrganismDisplay(this)
+      if(resources.getOrElse(resource, 0) <= 0) {
+        println(s"$id ${this.getClass.getSimpleName} Died due to lack of ${resource.name}")
+        Perished(this)
+      } else{
+        Seq()
+      } :+ UpdateOrganismDisplay(this)
     }
     case ResourceGain(_, resource: Resource, amount) => {
       val cur = resources.getOrElse(resource, 0)
@@ -49,75 +144,54 @@ trait Organism extends Entity {
       ResourceGain(targetId = sender.id, resource = resource, amount = deliverable),
       )
     }
-    case SpendResources(targetId, requiredResources: immutable.Map[Resource, Int], resultingEvents) => {
+    case SpendResources(targetId, requiredResources: Map[Resource, Int], resultingEvents) => {
       val (sufficient, insufficient) = requiredResources.partition { case (resource, amount) => resources.getOrElse(resource, 0) >= amount }
       
       if (insufficient.isEmpty) {
-        sufficient.foreach { case (resource, amount) => 
+        val resourcesLost = sufficient.map { case (resource, amount) => 
           val cur = resources.getOrElse(resource, 0)
-          resources.update(resource, cur - amount) 
+          ResourceLost(id, resource, amount) 
         }
-        resultingEvents :+ UpdateOrganismDisplay(this)
+        (resultingEvents ++ resourcesLost) :+ UpdateOrganismDisplay(this)
       } else {
-        val out = insufficient.toSeq.flatMap {
-          (resource, amount) => {
-            Seq.fill(amount)(acquire(resource)).flatMap(a => a)
-          }
-        } :+ AwaitingResources(
-          targetId = targetId,
-          requiredResources = requiredResources,
-          pendingEvent = SpendResources(targetId, requiredResources, resultingEvents)
-        )
-
-        out
-
+        InsufficientResources(targetId , insufficient)
       }
     }
-    case AwaitingResources(targetId, requiredResources, pendingEvent) => {
-      if (requiredResources.forall { case (resource, amount) => resources.getOrElse(resource, 0) >= amount }) {
-        // If all resources are available, fire off the pending events
-        Seq(pendingEvent)
-      } else {
-        // If not all resources are available, return this event again
-        Seq(AwaitingResources(targetId, requiredResources, pendingEvent))
+    case InsufficientResources(targetId, resources) => {
+      // println(s"Entity $targetId could not process resources $resources")
+      Seq()
+    }
+    case TargetFound(_, foundId) => {
+      target = Some(foundId)
+      Seq()
+    }
+    case TargetNotFound(_) =>{
+      target = None
+      Seq()
+    }
+    case IsPerished(_, perishedOrganism) => target match {
+      case Some(targetId) if targetId == perishedOrganism.id => {
+        target = None
+        Seq()
       }
+      case _ => Seq()
+    }
+    case Reproduce(_, dnaEntry) => {
+      val newResources = resources.map { case (resource, amount) => resource -> amount / 2 }.toMap
+      val newDna = dna.withModifiedProperty(dnaEntry)
+      val newOrganism = () => this match {
+        case plant: Plant => Plant(newDna, newResources)
+        case animal: Animal => Animal(newDna, newResources)
+        case fungi: Fungi => Fungi(newDna, newResources)
+      }
+      newResources.foreach { case (resource, amount) => resources.update(resource, resources(resource) - amount) }
+      Seq(
+      UpdateOrganismDisplay(this),
+      CreateOrganism(newOrganism),
+      )
     }
   }
   
   
-  def display: String = s"${this.getClass.getSimpleName}: ${resources.toString}"
-}
-
-case class AwaitingResources(targetId: Long, requiredResources: immutable.Map[Resource, Int], pendingEvent: SpendResources) extends Event
-case class ResourceLost(targetId: Long, resource: Resource, amount: Int) extends Event
-
-case class ResourceGain(targetId: Long, resource: Resource, amount: Int) extends Event
-
-case class ExtractResource(targetId: Long, resource: Resource, amount: Int, sender: Organism) extends Event
-
-case class SpendResources(targetId: Long, resources: immutable.Map[Resource, Int], resultingEvents: Seq[Event] = Seq.empty) extends Event
-
-case class Perished(organism: Organism) extends Event{
-  override val targetId = Entities.entityManager
-}
-
-case class IsPerished(targetId: Long, organism: PerishedOrganism) extends Event
-
-case class PerishedOrganism(override val id: Long, birthday: Int) extends Organism {
-  
-  override val acquire = {
-    case _ => Seq()
-  }
-
-  override val eventEmitters: Seq[EventEmitter] = Seq()
-  
-  override def eventHandlers: PartialFunction[Event, Seq[Event]] = {
-    case ExtractResource(_, resource, amount, sender) =>
-    sender match {
-      case animal: Animal => Seq(IsPerished(sender.id, this))
-      case fungi: Fungi => Seq() // TODO add fungi extaction logic
-      case _ => Seq() 
-    }
-    case event: Event => super.eventHandlers(event) // Other events are handled by the Organism trait
-  }
+  def display: String = s"${this.getClass.getSimpleName}: ${resources.mkString(", ")}"
 }
