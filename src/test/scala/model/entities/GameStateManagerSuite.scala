@@ -14,11 +14,11 @@ import model.entities.organisms.{Plant, Fungi}
 import org.scalatest.flatspec.AnyFlatSpec 
 import org.scalatest.funsuite.AnyFunSuite
 
-class EntityManagerSuite extends AnyFunSuite {
+class GameStateManagerSuite extends AnyFunSuite {
   
   test("A CreateOrganism event should add the organism to the game state and return an AddOrganismToDisplay event") {
     val gameState = GameState()
-    val manager = EntityManager(gameState)
+    val manager = GameStateManager(gameState)
     val organism = TestOrganism()
     val event = CreateOrganism(() => organism)
     val actual = manager.eventHandlers(event)
@@ -28,7 +28,7 @@ class EntityManagerSuite extends AnyFunSuite {
   
   test("A Perished event should remove the organism from the game state and return a RemoveOrganismFromDisplay event") {
     val gameState = GameState()
-    val manager = EntityManager(gameState)
+    val manager = GameStateManager(gameState)
     val organism = TestOrganism()
     gameState.entities += (organism.id -> organism)
     val event = Perished(organism)
@@ -39,7 +39,7 @@ class EntityManagerSuite extends AnyFunSuite {
   
   test("A FindTarget event should return a TargetFound event when a matching target is found") {
     val gameState = GameState()
-    val manager = EntityManager(gameState)
+    val manager = GameStateManager(gameState)
     val plant = Plant()
     val fungi = Fungi()
     gameState.entities += (plant.id -> plant)
@@ -52,7 +52,7 @@ class EntityManagerSuite extends AnyFunSuite {
   
   test("A FindTarget event should return a TargetNotFound event when no matching target is found") {
     val gameState = GameState()
-    val manager = EntityManager(gameState)
+    val manager = GameStateManager(gameState)
     val plant = Plant()
     gameState.entities += (plant.id -> plant)
     val event = FindTarget({ case (_, o: Fungi) => o }, plant.id)
@@ -63,7 +63,7 @@ class EntityManagerSuite extends AnyFunSuite {
   
   test("An unhandled event should return an empty sequence") {
     val gameState = GameState()
-    val manager = EntityManager(gameState)
+    val manager = GameStateManager(gameState)
     val event = UpdateOrganismDisplay(TestOrganism())
     val actual = manager.eventHandlers(event)
     val expected = Seq.empty

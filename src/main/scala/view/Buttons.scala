@@ -3,7 +3,7 @@ package view
 import model.entities.{Entity, Entities, Organism}
 import model.events.{
   Event, ButtonPressed, Reproduce, OrganismSelected, DNAEntrySelected,
-  EventEmitter,
+  EventEmitter, Pause, Play,
   eventToSeq,
 }
 import model.dna.{DNAEntry}
@@ -36,6 +36,34 @@ class CreateOrganismButton(button: Button) extends Entity {
       selectedDNAEntry = Some(dnaEntry)
       Seq()
     }
+    case _ => Seq[Event]()
+  }
+}
+
+class PauseButton(button: Button) extends Entity {
+  override val id = Entities.pauseButton
+  button.onAction = (_) => {
+    this.events.enqueue(ButtonPressed(id))
+  }
+
+  def eventEmitters: Seq[EventEmitter] = Seq()
+
+  val eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case event: ButtonPressed => Seq(Pause)
+    case _ => Seq[Event]()
+  }
+}
+
+class PlayButton(button: Button) extends Entity {
+  override val id = Entities.playButton
+  button.onAction = (_) => {
+    this.events.enqueue(ButtonPressed(id))
+  }
+
+  def eventEmitters: Seq[EventEmitter] = Seq()
+
+  val eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case event: ButtonPressed => Seq(Play)
     case _ => Seq[Event]()
   }
 }

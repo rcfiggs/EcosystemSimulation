@@ -13,9 +13,9 @@ import model.entities.Environment
 import view.EnvironmentDisplay
 import scalafx.scene.layout.Priority
 import scalafx.geometry.Insets
-import view.{DNADisplay, OrganismDisplay, CreateOrganismButton}
+import view.{DNADisplay, OrganismDisplay, CreateOrganismButton, PauseButton, PlayButton}
 import model.GameState
-import model.entities.{Entity, Entities, EntityManager, Organism}
+import model.entities.{Entity, Entities, GameStateManager, Organism}
 import model.entities.organisms.{Plant, Animal, Fungi}
 import model.dna.{DNAEntry}
 import model.events.{Event, UpdateOrganismDisplay, UpdateEnviornmentDisplay}
@@ -23,7 +23,6 @@ import model.resources.{Water, Nutrient, Sunlight}
 
 
 object SimpleApp extends JFXApp3 {
-  def main(): Unit = {} 
   val gameState: GameState = new GameState()
   
   override def start(): Unit = {
@@ -73,8 +72,15 @@ object SimpleApp extends JFXApp3 {
     val organismOptions = ObservableBuffer[String]("Plant", "Animal", "Fungi")
     val createOrganismButton = new Button("Create Organism")
     gameState.addEntity(CreateOrganismButton(createOrganismButton))
+
+    val pauseButton = new Button("Pause")
+    gameState.addEntity(PauseButton(pauseButton))
+
+    val playButton = new Button("Play")
+    gameState.addEntity(PlayButton(playButton))
     
-    gameState.addEntity(EntityManager(gameState))
+    val gameStateManager = GameStateManager(gameState)
+    gameState.addEntity(gameStateManager)
 
     val environmentData = ObservableBuffer[String]()
     val environmentList = ListView[String](environmentData)
@@ -87,7 +93,9 @@ object SimpleApp extends JFXApp3 {
         Text("Environment"), 
         environmentList, 
         organismsHBox,
-        createOrganismButton
+        createOrganismButton,
+        pauseButton,
+        playButton,
       )
     }
     
@@ -97,7 +105,7 @@ object SimpleApp extends JFXApp3 {
     
     AnimationTimer((now: Long) => {
       val time = System.currentTimeMillis()
-      gameState.processFrame(time)
+      gameStateManager.processFrame(time)
     }).start()
   }
 }
