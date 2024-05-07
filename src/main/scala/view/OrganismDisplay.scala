@@ -19,7 +19,7 @@ import scalafx.scene.control.ListCell
 class OrganismDisplay(val dataList: ObservableBuffer[Organism], listView: ListView[Organism]) extends Entity {
   override val id = Entities.organismDisplay
   val organismMap: mutable.Map[Long, Int] = mutable.Map[Long,Int]()
-  val organismsToRemove: mutable.Set[Long] = mutable.Set()
+  
   listView.getSelectionModel.selectedIndexProperty.addListener(new ChangeListener[Number] {
     override def changed(observable: ObservableValue[? <: Number], oldIndex: Number, newIndex: Number): Unit = {
       val selectedOrganism = listView.getSelectionModel.getSelectedItem
@@ -31,25 +31,10 @@ class OrganismDisplay(val dataList: ObservableBuffer[Organism], listView: ListVi
   listView.cellFactory = (cell: ListCell[Organism], organism: Organism) => {
     cell.text = organism.display
   }
-  def removeOrganism(organism: Organism): Unit = {
-    organismsToRemove.add(organism.id)
-  }
-  def eventEmitters: Seq[EventEmitter] = Seq(
-  ConditionalEmitter(
-  condition = () => !organismsToRemove.isEmpty,
-  eventGenerator = (time: Long) => {
-    if (!organismsToRemove.isEmpty) {
-      val organismId = organismsToRemove.head
-      organismsToRemove -= organismId
-      Some(RemoveFromDisplay(organismId))
-    } else {
-      None
-    }
-  }
-  )
-  )
+  
+  def eventEmitters: Seq[EventEmitter] = Seq()
   val eventHandlers = {
-        case AddOrganismToDisplay(organism) => {
+    case AddOrganismToDisplay(organism) => {
       val index = dataList.indexWhere(_.getClass.getSimpleName > organism.getClass.getSimpleName)
       if (index == -1) {
         dataList.add(organism)
@@ -68,13 +53,15 @@ class OrganismDisplay(val dataList: ObservableBuffer[Organism], listView: ListVi
       Seq()
     }
     case RemoveOrganismFromDisplay(id) => {
-      val index = organismMap(id)
-      dataList.remove(index)
-      organismMap -= id
-      organismMap.foreach {
-        case (id, idx) => {
-          if (idx > index) {
-            organismMap(id) = idx - 1
+      if(organismMap.contains(id)){
+        val index = organismMap(id)
+        dataList.remove(index)
+        organismMap -= id
+        organismMap.foreach {
+          case (id, idx) => {
+            if (idx > index) {
+              organismMap(id) = idx - 1
+            }
           }
         }
       }
@@ -92,8 +79,8 @@ class OrganismDisplay(val dataList: ObservableBuffer[Organism], listView: ListVi
     }
     case OrganismSelected(_, organism) => {
       Seq(
-        UpdateDNADisplay(organism.dna),
-        OrganismSelected(Entities.createOrganismButton, organism)
+      UpdateDNADisplay(organism.dna),
+      OrganismSelected(Entities.createOrganismButton, organism)
       )
     }
     case RemoveFromDisplay(id) => {

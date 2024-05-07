@@ -11,21 +11,16 @@ import view.OrganismDisplay
 
 case class GameStateManager(gameState: GameState) extends Entity {
   override val id = Entities.gameStateManager
-
-  private var paused = false
-  private var gameTime: Long = 0
-  private var lastFrameTime: Long = 0
-
   
   override val eventEmitters: Seq[EventEmitter] = Seq()
   
   override val eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case Pause => {
-      paused = true
+      gameState.paused = true
       Seq()
     }
     case Play => {
-      paused = false
+      gameState.paused = false
       Seq()
     }
     case CreateOrganism(newOrganism) => {
@@ -54,12 +49,6 @@ case class GameStateManager(gameState: GameState) extends Entity {
   } 
 
   def processFrame(time: Long): Unit = {
-    val deltaTime = time - lastFrameTime
-    lastFrameTime = time
-
-    if (!paused) {
-      gameTime += deltaTime
-      gameState.processFrame(gameTime)
-    }
+    gameState.processFrame(time)
   }
 }
