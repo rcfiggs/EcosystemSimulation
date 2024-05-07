@@ -3,18 +3,26 @@ package model.entities
 import model.GameState
 import model.events.{
   Event, CreateOrganism, UpdateOrganismDisplay, Perished, AddOrganismToDisplay, RemoveOrganismFromDisplay,
-  FindTarget, TargetFound, TargetNotFound,
+  FindTarget, TargetFound, TargetNotFound, Pause, Play,
   EventEmitter,
   eventToSeq,
 }
 import view.OrganismDisplay
 
-case class EntityManager(gameState: GameState) extends Entity {
-  override val id = Entities.entityManager
+case class GameStateManager(gameState: GameState) extends Entity {
+  override val id = Entities.gameStateManager
   
   override val eventEmitters: Seq[EventEmitter] = Seq()
   
   override val eventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case Pause => {
+      gameState.paused = true
+      Seq()
+    }
+    case Play => {
+      gameState.paused = false
+      Seq()
+    }
     case CreateOrganism(newOrganism) => {
       val organism = newOrganism()
       gameState.addEntity(organism)
@@ -39,4 +47,8 @@ case class EntityManager(gameState: GameState) extends Entity {
     }
     case _ => Seq[Event]()
   } 
+
+  def processFrame(time: Long): Unit = {
+    gameState.processFrame(time)
+  }
 }

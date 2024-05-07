@@ -13,9 +13,17 @@ sealed trait Event {
 
 implicit def eventToSeq(event: Event): Seq[Event] = Seq(event)
 
-// Entity Manager Events
+// Game State Manager Events
 case class CreateOrganism(newOrganism: () => Organism) extends Event{
-  override val targetId = Entities.entityManager
+  override val targetId = Entities.gameStateManager
+}
+
+case object Play extends Event {
+  override val targetId = Entities.gameStateManager
+}
+
+case object Pause extends Event {
+  override val targetId = Entities.gameStateManager
 }
 
 // Environment Events
@@ -23,14 +31,14 @@ case class Rainfall(time: Long, amount: Int) extends Event {
   override val targetId = Entities.environment
 }
 case class Flood(time: Long, excessRainFall: Int) extends Event{
-  override val targetId = Entities.entityManager
+  override val targetId = Entities.gameStateManager
 }
 
 // Organism Events
 case class Reproduce(targetId: Long, dnaEntry: DNAEntry) extends Event
 
 case class FindTarget[O <: Organism](pf: PartialFunction[(Long, Entity), O], senderId: Long) extends Event {
-  override val targetId = Entities.entityManager
+  override val targetId = Entities.gameStateManager
 }
 case class TargetFound(targetId: Long, foundId: Long) extends Event
 case class TargetNotFound(targetId: Long) extends Event
@@ -41,7 +49,7 @@ case class ResourceGain(targetId: Long, resource: Resource, amount: Int) extends
 case class ExtractResource(targetId: Long, resource: Resource, amount: Int, sender: Organism) extends Event
 case class SpendResources(targetId: Long, resources: Map[Resource, Int], resultingEvents: Seq[Event] = Seq.empty) extends Event
 case class Perished(organism: Organism) extends Event{
-  override val targetId = Entities.entityManager
+  override val targetId = Entities.gameStateManager
 }
 case class IsPerished(targetId: Long, organism: PerishedOrganism) extends Event
 
