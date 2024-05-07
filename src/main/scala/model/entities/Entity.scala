@@ -24,14 +24,15 @@ trait Entity {
 }
 
 object Entities {
-  val entityManager = 1
+  val gameStateManager = 1
   val organismDisplay = 2
-  val endDayButton = 3
-  val createOrganismButton = 4
-  val environment = 5
-  val environmentDisplay = 6
-  val dnaDisplay = 7
-  var nextId: Long = 8
+  val pauseButton = 3
+  val playButton = 4
+  val createOrganismButton = 5
+  val environment = 6
+  val environmentDisplay = 7
+  val dnaDisplay = 8
+  var nextId: Long = 9
   def newId: Long = {
     val id = nextId
     nextId += 1
