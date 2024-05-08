@@ -10,7 +10,7 @@ import model.events.Event
 import scala.collection.mutable
 import scala.collection.immutable
 
-case class Plant(val dna: DNA = Plant.dna, val initialResources: Map[Resource, Int] = Plant.initialResources) extends Organism {
+case class Plant(val dna: DNA = Plant.dna) extends Organism {
   
   override def eventEmitters = super.eventEmitters :++ Seq()
   
@@ -23,29 +23,30 @@ case class Plant(val dna: DNA = Plant.dna, val initialResources: Map[Resource, I
 object Plant {
   val dna = DNA(
     intake = Map(
-    Water -> 32,
-    Sunlight -> 16,
+      Water -> 32,
+      Sunlight -> 16,
     ),
     extraction = Map(
       Mycelium -> 1,
     ),
     capacity = Map(
-    Water -> 100,
-    Sunlight -> 100,
-    Mycelium -> 100,
-    Nutrient -> 100,
-    Sugar -> 100,
+      Water -> 100,
+      Sunlight -> 100,
+      Mycelium -> 100,
+      Nutrient -> 100,
+      Sugar -> 100,
     ),
     synthesis = Map(
-    ProduceSugar -> 16,
-    ExtractNutrientFromMycelium -> 2,
+      ProduceSugar -> 16,
+      ExtractNutrientFromMycelium -> 2,
+    ),
+    initialResources = Map(
+      Water -> 40,
+      Sunlight -> 40,
+      Mycelium -> 40,
+      Nutrient -> 40,
+      Sugar -> 40,
     )
   )
-  val initialResources: Map[Resource, Int] = Map(
-  Water -> 40,
-  Sunlight -> 40,
-  Mycelium -> 40,
-  Nutrient -> 40,
-  Sugar -> 40,
-  )
+
 }

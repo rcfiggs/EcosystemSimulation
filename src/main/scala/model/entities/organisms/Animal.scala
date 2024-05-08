@@ -10,7 +10,7 @@ import model.events.Event
 import scala.collection.mutable
 
 
-case class Animal(override val dna: DNA = Animal.dna, override val initialResources: Map[Resource, Int] = Animal.initialResources) extends Organism {  
+case class Animal(override val dna: DNA = Animal.dna) extends Organism {  
   override def eventEmitters = super.eventEmitters :++ Seq()
   
   override def eventHandlers: PartialFunction[Event, Seq[Event]] = super.eventHandlers orElse {
@@ -37,13 +37,14 @@ object Animal {
     synthesis = Map(
       ProduceFat -> 8,
       ProduceProtein -> 2,
+    ),
+    initialResources = Map(
+      Water -> 25,
+      Sugar -> 25,
+      Nutrient -> 25,
+      Protein -> 25,
+      Fat -> 25,
     )
   )
-  val initialResources: Map[Resource, Int] = Map(
-  Water -> 25,
-  Sugar -> 25,
-  Nutrient -> 25,
-  Protein -> 25,
-  Fat -> 25,
-  )
+
 }

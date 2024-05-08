@@ -18,12 +18,11 @@ import scala.collection.mutable
 
 trait Organism extends Entity {
   val id: Long = Entities.newId
-  val initialResources: Map[Resource, Int]
   val dna: DNA
   var target: Option[Long] = None
   
   val resources = mutable.Map[Resource, Int]()
-  resources.addAll(initialResources)
+  resources.addAll(dna.initialResources)
   val intakeRate: Map[Resource, Int] = dna.intake
   val extractionRate: Map[Resource, Int] = dna.extraction
   val synthesisRate: Map[Conversion, Int] = dna.synthesis
@@ -180,9 +179,9 @@ trait Organism extends Entity {
       val newResources = resources.map { case (resource, amount) => resource -> amount / 2 }.toMap
       val newDna = dna.withModifiedProperty(dnaEntry)
       val newOrganism = () => this match {
-        case plant: Plant => Plant(newDna, newResources)
-        case animal: Animal => Animal(newDna, newResources)
-        case fungi: Fungi => Fungi(newDna, newResources)
+        case plant: Plant => Plant(newDna)
+        case animal: Animal => Animal(newDna)
+        case fungi: Fungi => Fungi(newDna)
       }
       newResources.foreach { case (resource, amount) => resources.update(resource, resources(resource) - amount) }
       Seq(

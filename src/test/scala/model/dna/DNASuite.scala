@@ -11,7 +11,8 @@ class DNASuite extends AnyFunSuite {
     intake = Map(Sunlight -> 1),
     extraction = Map(Water -> 2),
     synthesis = Map(ProduceSugar -> 1),
-    capacity = Map(Water -> 10, Sunlight -> 10, Sugar -> 10)
+    capacity = Map(Water -> 10, Sunlight -> 10, Sugar -> 10),
+    initialResources = Map(),
 )
 
   test("toEntries should return a list of DNAEntries representing the current state"){

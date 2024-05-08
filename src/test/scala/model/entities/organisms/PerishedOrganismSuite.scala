@@ -11,7 +11,8 @@ class PerishedOrganismSuite extends AnyFunSuite {
   intake = Map(Water -> 10),
   extraction = Map(Sugar -> 5),
   synthesis = Map(),
-  capacity = Map(Water -> 50, Sugar -> 50)
+  capacity = Map(Water -> 50, Sugar -> 50),
+  initialResources = Map(Water -> 10),
 )
 
   test("A PerishedOrganism should have the correct DNA") {
@@ -20,9 +21,8 @@ class PerishedOrganismSuite extends AnyFunSuite {
   }
 
   test("A PerishedOrganism should have the correct initial resources") {
-    val initialResources: Map[Resource, Int] = Map(Water -> 10)
-    val perishedOrganism = PerishedOrganism(1, dna, initialResources)
-    assert(perishedOrganism.initialResources === initialResources)
+    val perishedOrganism = PerishedOrganism(1, dna)
+    assert(perishedOrganism.resources === dna.initialResources)
   }
 
   test("A PerishedOrganism should handle an ExtractResource event from an Animal correctly") {

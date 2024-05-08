@@ -9,9 +9,4 @@ class PlantSuite extends AnyFunSuite {
     val plant = Plant()
     assert(plant.dna === Plant.dna)
   }
-
-  test("An Plant should have the correct initial resources") {
-    val plant = Plant()
-    assert(plant.initialResources === Plant.initialResources)
-  }
 }

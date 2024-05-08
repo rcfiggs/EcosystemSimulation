@@ -6,14 +6,16 @@ import model.events.{
   TargetFound, TargetNotFound, IsPerished, Reproduce, CreateOrganism,
 }
 import model.resources.Water
-import model.dna.IntakeEntry
+import model.dna.{DNA, IntakeEntry}
 
 import org.scalatest.funsuite.AnyFunSuite
 
 class OrganismSuite extends AnyFunSuite {
 
+  val dna: DNA = TestOrganism().dna.copy(initialResources = Map(Water -> 10))
+
   test("A ResourceLost event should update the organism's resources and return an UpdateOrganismDisplay event") {
-    val organism = TestOrganism(initialResources = Map(Water -> 10))
+    val organism = TestOrganism(dna = dna)
     val event = ResourceLost(targetId = organism.id, resource = Water, amount = 5)
     val actual = organism.eventHandlers(event)
     val expected = Seq(UpdateOrganismDisplay(organism))
@@ -21,7 +23,7 @@ class OrganismSuite extends AnyFunSuite {
   }
 
   test("A ResourceGain event should update the organism's resources and return an UpdateOrganismDisplay event") {
-    val organism = TestOrganism(initialResources = Map(Water -> 10))
+    val organism = TestOrganism(dna = dna)
     val event = ResourceGain(targetId = organism.id, resource = Water, amount = 5)
     val actual = organism.eventHandlers(event)
     val expected = Seq(UpdateOrganismDisplay(organism))
@@ -29,7 +31,7 @@ class OrganismSuite extends AnyFunSuite {
   }
 
   test("An ExtractResource event should update the organism's resources and return a ResourceLost event for the target, and a ResrouceGain event for the organism") {
-    val organism = TestOrganism(initialResources = Map(Water -> 10))
+    val organism = TestOrganism(dna = dna)
     val event = ExtractResource(targetId = 0, resource = Water, amount = 5, sender = organism)
     val actual = organism.eventHandlers(event)
     val expected = Seq(ResourceLost(targetId = 0, resource = Water, amount = 5), ResourceGain(0, Water, 5))
@@ -37,7 +39,7 @@ class OrganismSuite extends AnyFunSuite {
   }
 
   test("A SpendResources event should update the organism's resources and return a ResourceLost event") {
-    val organism = TestOrganism(initialResources = Map(Water -> 10))
+    val organism = TestOrganism(dna = dna)
     val event = SpendResources(targetId = organism.id, resources = Map(Water -> 5), resultingEvents = Seq())
     val actual = organism.eventHandlers(event)
     val expected = Seq(
@@ -47,7 +49,7 @@ class OrganismSuite extends AnyFunSuite {
   }
 
   test("An InsufficientResources event should not update the organism's resources and return an empty sequence") {
-    val organism = TestOrganism(initialResources = Map(Water -> 10))
+    val organism = TestOrganism(dna = dna)
     val event = InsufficientResources(targetId = organism.id, resources = Map(Water -> 15))
     val actual = organism.eventHandlers(event)
     val expected = Seq.empty
