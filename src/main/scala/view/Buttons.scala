@@ -9,11 +9,50 @@ import model.events.{
 import model.dna.{DNAEntry}
 
 import scalafx.scene.control.{ Button, ChoiceBox}
+import scalafx.stage.Stage
+import scalafx.scene.Scene
+import scalafx.scene.layout.VBox
+import model.entities.organisms.Plant
+import model.entities.organisms.Animal
+import model.entities.organisms.Fungi
 
 class CreateOrganismButton(button: Button) extends Entity {
   override val id = Entities.createOrganismButton
   button.onAction = (_) => {
-    this.events.enqueue(ButtonPressed(id))
+    val stage = new Stage {
+      title = "Select Organism"
+      scene = new Scene {
+        root = new VBox {
+          children = Seq(
+            new Button("Plant") {
+              onAction = (_) => {
+                // Handle plant selection here
+                // For example, you can emit an event
+                events.enqueue(OrganismSelected(Entities.createOrganismButton, new Plant()))
+                close()
+              }
+            },
+            new Button("Animal") {
+              onAction = (_) => {
+                // Handle animal selection here
+                // For example, you can emit an event
+                events.enqueue(OrganismSelected(Entities.createOrganismButton, new Animal()))
+                close()
+              }
+            },
+            new Button("Fungi") {
+              onAction = (_) => {
+                // Handle fungi selection here
+                // For example, you can emit an event
+                events.enqueue(OrganismSelected(Entities.createOrganismButton, new Fungi()))
+                close()
+              }
+            }
+          )
+        }
+      }
+    }
+    stage.showAndWait()
   }
 
   private var selectedOrganism: Option[Organism] = None
