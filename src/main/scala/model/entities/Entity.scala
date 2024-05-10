@@ -32,7 +32,8 @@ object Entities {
   val environment = 6
   val environmentDisplay = 7
   val dnaDisplay = 8
-  var nextId: Long = 9
+  val createOrganismWindow = 9
+  var nextId: Long = 10
   def newId: Long = {
     val id = nextId
     nextId += 1

@@ -15,44 +15,12 @@ import scalafx.scene.layout.VBox
 import model.entities.organisms.Plant
 import model.entities.organisms.Animal
 import model.entities.organisms.Fungi
+import scalafx.stage.Modality
 
 class CreateOrganismButton(button: Button) extends Entity {
   override val id = Entities.createOrganismButton
   button.onAction = (_) => {
-    val stage = new Stage {
-      title = "Select Organism"
-      scene = new Scene {
-        root = new VBox {
-          children = Seq(
-            new Button("Plant") {
-              onAction = (_) => {
-                // Handle plant selection here
-                // For example, you can emit an event
-                events.enqueue(OrganismSelected(Entities.createOrganismButton, new Plant()))
-                close()
-              }
-            },
-            new Button("Animal") {
-              onAction = (_) => {
-                // Handle animal selection here
-                // For example, you can emit an event
-                events.enqueue(OrganismSelected(Entities.createOrganismButton, new Animal()))
-                close()
-              }
-            },
-            new Button("Fungi") {
-              onAction = (_) => {
-                // Handle fungi selection here
-                // For example, you can emit an event
-                events.enqueue(OrganismSelected(Entities.createOrganismButton, new Fungi()))
-                close()
-              }
-            }
-          )
-        }
-      }
-    }
-    stage.showAndWait()
+    OrganismSelectionWindow.showAndWait()
   }
 
   private var selectedOrganism: Option[Organism] = None
