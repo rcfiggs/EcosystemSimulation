@@ -6,13 +6,14 @@ import model.events.{
   TargetFound, TargetNotFound, IsPerished, Reproduce, CreateOrganism,
 }
 import model.resources.Water
-import model.dna.{DNA, IntakeEntry}
+import model.dna.{DNA, InitialResource, Extraction}
 
 import org.scalatest.funsuite.AnyFunSuite
+import model.dna.DNAMutation
 
 class OrganismSuite extends AnyFunSuite {
 
-  val dna: DNA = TestOrganism().dna.copy(initialResources = Map(Water -> 10))
+  val dna: DNA = DNA(properties = Map(InitialResource(Water) -> 10))
 
   test("A ResourceLost event should update the organism's resources and return an UpdateOrganismDisplay event") {
     val organism = TestOrganism(dna = dna)
@@ -86,7 +87,7 @@ class OrganismSuite extends AnyFunSuite {
 
   test("A Reproduce event should create a new organism and return a CreateOrganism event") {
     val organism = TestOrganism()
-    val event = Reproduce(targetId = 0, dnaEntry = IntakeEntry(Water, 0))
+    val event = Reproduce(targetId = 0, dnaMutation = DNAMutation(Extraction(Water), 0))
     val actual = organism.eventHandlers(event)
     val matches = actual match {
       case Seq(

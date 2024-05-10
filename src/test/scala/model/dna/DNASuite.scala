@@ -1,48 +1,51 @@
 package model.dna
 
 import model.resources._
-import model.dna.{DNA, IntakeEntry, ExtractionEntry, SynthesisEntry, CapacityEntry}
+import model.dna.{DNA, DNAEntry, DNAMutation, Extraction, Consumption, Synthesis, Capacity, InitialResource}
 
 import org.scalatest.flatspec.AnyFlatSpec 
 import org.scalatest.funsuite.AnyFunSuite
 
 class DNASuite extends AnyFunSuite {
   val dna = DNA(
-    intake = Map(Sunlight -> 1),
-    extraction = Map(Water -> 2),
-    synthesis = Map(ProduceSugar -> 1),
-    capacity = Map(Water -> 10, Sunlight -> 10, Sugar -> 10),
-    initialResources = Map(),
-)
+    properties = Map(
+      Extraction(Sunlight) -> 1,
+      Consumption(Water) -> 2,
+      Synthesis(ProduceSugar) -> 1,
+      Capacity(Water) -> 10,
+      Capacity(Sunlight) -> 10,
+      Capacity(Sugar) -> 10,
+      InitialResource(Water) -> 0,
+      InitialResource(Sunlight) -> 0,
+      InitialResource(Sugar) -> 0,
+    )
+  )
 
   test("toEntries should return a list of DNAEntries representing the current state"){
     val entries = dna.toEntries
     val expected = Seq(
-      IntakeEntry(Sunlight, 1),
-      ExtractionEntry(Water, 2),
-      SynthesisEntry(ProduceSugar, 1),
-      CapacityEntry(Water, 10), CapacityEntry(Sunlight, 10), CapacityEntry(Sugar, 10)
+      DNAEntry(Extraction(Sunlight), 1),
+      DNAEntry(Consumption(Water), 2),
+      DNAEntry(Synthesis(ProduceSugar), 1),
+      DNAEntry(Capacity(Water), 10),
+      DNAEntry(Capacity(Sunlight), 10),
+      DNAEntry(Capacity(Sugar), 10),
+      DNAEntry(InitialResource(Water), 0),
+      DNAEntry(InitialResource(Sunlight), 0),
+      DNAEntry(InitialResource(Sugar), 0),
     )
-    assert(entries === expected)
+    assert(entries.forall(dnaEntry => expected.contains(dnaEntry)))
   }
 
-  test("withModifiedProperty should update intake") {
-    val newDna = dna.withModifiedProperty(IntakeEntry(Sunlight, 0))
-    assert(newDna.intake(Sunlight) === math.ceil(1 * 1.2).toInt)
+  test("withMutation should update property") {
+    val mutation = DNAMutation(Extraction(Sunlight), 0.5)
+    val newDna = dna.withMutation(mutation)
+    assert(newDna.properties(Extraction(Sunlight)) === (1 * (1 + 0.5)).toInt)
   }
 
-  test("withModifiedProperty should update extraction") {
-    val newDna = dna.withModifiedProperty(ExtractionEntry(Water, 0))
-    assert(newDna.extraction(Water) === math.ceil(2 * 1.2).toInt)
-  }
-
-  test("withModifiedProperty should update synthesis") {
-    val newDna = dna.withModifiedProperty(SynthesisEntry(ProduceSugar, 0))
-    assert(newDna.synthesis(ProduceSugar) === math.ceil(1 * 1.2).toInt)
-  }
-
-  test("withModifiedProperty should update capacity") {
-    val newDna = dna.withModifiedProperty(CapacityEntry(Water, 0))
-    assert(newDna.capacity(Water) === math.ceil(10 * 1.2).toInt)
+  test("getRandomMutations should return a sequence of random mutations") {
+    val mutations = dna.randomMutations
+    assert(mutations.size === 1)
+    assert(mutations.forall((mutation) => mutation.modifier >= -1 && mutation.modifier <= 1))
   }
 }

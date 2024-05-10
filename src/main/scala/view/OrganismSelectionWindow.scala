@@ -14,7 +14,7 @@ import scalafx.stage.Modality
 import model.events.EventEmitter
 import model.events.Event
 import model.entities.Organism
-import model.dna.DNAEntry
+import model.dna.DNAMutation
 import scalafx.scene.control.ListView
 import scalafx.scene.layout.BorderPane
 import scalafx.scene.layout.HBox
@@ -28,7 +28,7 @@ object OrganismSelectionWindow extends Entity {
   }
 
   private var selectedOrganism: Option[Organism] = None
-  private var selectedDNAEntry: Option[DNAEntry] = None
+  private var selectedDNAMutation: Option[DNAMutation] = None
 
   def eventEmitters: Seq[EventEmitter] = Seq()
 
@@ -41,14 +41,15 @@ object OrganismSelectionWindow extends Entity {
   }
 
   def showAndWait(): Unit = {
-    val dnaEntries = selectedOrganism match {
-      case Some(organism) => organism.dna.toEntries
+    val dnaMutations = selectedOrganism match {
+      case Some(organism) => organism.dna.randomMutations
       case None => Seq() // Handle the case where no organism is selected
     }
+    println(dnaMutations)
 
-    val listView = new ListView[DNAEntry](dnaEntries) {
+    val listView = new ListView[DNAMutation](dnaMutations) {
       this.getSelectionModel.selectedItemProperty.addListener { (_, _, newValue) =>
-        selectedDNAEntry = Some(newValue)
+        selectedDNAMutation = Some(newValue)
       }
     }
 
@@ -56,8 +57,8 @@ object OrganismSelectionWindow extends Entity {
       disable = true
       onAction = (_) => {
         selectedOrganism match {
-          case Some(organism) => selectedDNAEntry match {
-            case Some(dnaEntry) => events.enqueue(Forward(Reproduce(organism.id, dnaEntry)))
+          case Some(organism) => selectedDNAMutation match {
+            case Some(dnaMutation) => events.enqueue(Forward(Reproduce(organism.id, dnaMutation)))
             case None => // This should not happen
           }
           case None => // This should not happen

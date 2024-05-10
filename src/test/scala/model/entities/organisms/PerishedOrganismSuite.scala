@@ -3,17 +3,17 @@ package model.entities.organisms
 import org.scalatest.funsuite.AnyFunSuite
 import _root_.model.resources.{Resource, Water, Sugar}
 import _root_.model.events.{ExtractResource, IsPerished}
-import _root_.model.dna.DNA
+import _root_.model.dna.{DNA, Extraction, Consumption, Capacity, InitialResource}
 
 class PerishedOrganismSuite extends AnyFunSuite {
 
-  val dna = DNA(
-  intake = Map(Water -> 10),
-  extraction = Map(Sugar -> 5),
-  synthesis = Map(),
-  capacity = Map(Water -> 50, Sugar -> 50),
-  initialResources = Map(Water -> 10),
-)
+  val dna = DNA(properties = Map(
+    Extraction(Water) -> 10,
+    Consumption(Sugar) -> 5,
+    Capacity(Water) -> 50,
+    Capacity(Sugar) -> 50,
+    InitialResource(Water) -> 10,
+  ))
 
   test("A PerishedOrganism should have the correct DNA") {
     val perishedOrganism = PerishedOrganism(1, dna)

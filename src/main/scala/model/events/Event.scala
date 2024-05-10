@@ -2,7 +2,7 @@ package model.events
 
 import model.entities.{Entity, Entities, Organism}
 import model.entities.organisms.PerishedOrganism
-import model.dna.{DNA, DNAEntry}
+import model.dna.{DNA, DNAEntry, DNAMutation}
 import model.resources.{Resource, NaturalResource}
 import scala.language.implicitConversions
 
@@ -30,7 +30,7 @@ case class Flood(time: Long, excessRainFall: Int) extends Event{
 }
 
 // Organism Events
-case class Reproduce(targetId: Long, dnaEntry: DNAEntry) extends Event
+case class Reproduce(targetId: Long, dnaMutation: DNAMutation) extends Event
 
 case class FindTarget[O <: Organism](pf: PartialFunction[(Long, Entity), O], senderId: Long) extends Event {
   override val targetId = Entities.gameStateManager

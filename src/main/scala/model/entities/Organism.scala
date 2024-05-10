@@ -23,10 +23,10 @@ trait Organism extends Entity {
   
   val resources = mutable.Map[Resource, Int]()
   resources.addAll(dna.initialResources)
-  val intakeRate: Map[Resource, Int] = dna.intake
-  val extractionRate: Map[Resource, Int] = dna.extraction
-  val synthesisRate: Map[Conversion, Int] = dna.synthesis
-  val resourceCapacities: Map[Resource, Int] = dna.capacity
+  val intakeRate: Map[Resource, Int] = dna.intakeRate
+  val extractionRate: Map[Resource, Int] = dna.extractionRate
+  val synthesisRate: Map[Conversion, Int] = dna.synthesisRate
+  val resourceCapacities: Map[Resource, Int] = dna.resourceCapacities
   
   val waterLossEmitter = TimedEmitter(
   frequency = 5000,
@@ -175,9 +175,9 @@ trait Organism extends Entity {
       }
       case _ => Seq()
     }
-    case Reproduce(_, dnaEntry) => {
+    case Reproduce(_, dnaMutation) => {
       val newResources = resources.map { case (resource, amount) => resource -> amount / 2 }.toMap
-      val newDna = dna.withModifiedProperty(dnaEntry)
+      val newDna = dna.withMutation(dnaMutation)
       val newOrganism = () => this match {
         case plant: Plant => Plant(newDna)
         case animal: Animal => Animal(newDna)
