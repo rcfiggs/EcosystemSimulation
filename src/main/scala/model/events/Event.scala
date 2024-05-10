@@ -14,18 +14,13 @@ sealed trait Event {
 implicit def eventToSeq(event: Event): Seq[Event] = Seq(event)
 
 // Game State Manager Events
-case class CreateOrganism(newOrganism: () => Organism) extends Event{
+sealed trait GameStateManagerEvent extends Event {
   override val targetId = Entities.gameStateManager
 }
-
-case object Play extends Event {
-  override val targetId = Entities.gameStateManager
-}
-
-case object Pause extends Event {
-  override val targetId = Entities.gameStateManager
-}
-
+case class CreateOrganism(newOrganism: () => Organism) extends GameStateManagerEvent
+case object Play extends GameStateManagerEvent 
+case object Pause extends GameStateManagerEvent 
+case class Forward(events: Seq[Event]) extends GameStateManagerEvent 
 // Environment Events
 case class Rainfall(time: Long, amount: Int) extends Event {
   override val targetId = Entities.environment

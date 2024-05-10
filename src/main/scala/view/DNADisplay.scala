@@ -17,29 +17,23 @@ import javafx.beans.value.ObservableValue
 import scalafx.scene.control.ListCell
 
 
-class DNADisplay(dataList: ObservableBuffer[DNAEntry], listView: ListView[DNAEntry]) extends Entity {
+object DNADisplay extends Entity {
   override val id = Entities.dnaDisplay
-  
-  listView.cellFactory = (cell: ListCell[DNAEntry], dna: DNAEntry) => cell.text = dna.toString
-  
-  listView.getSelectionModel.selectedIndexProperty.addListener(new ChangeListener[Number] {
-    override def changed(observable: ObservableValue[? <: Number], oldIndex: Number, newIndex: Number): Unit = {
-      val selected = listView.getSelectionModel.getSelectedItem
-      if (selected != null) {
-        events.enqueue(DNAEntrySelected(id, selected))
-      }
-    }
-  })
-  
+
+  private val dataList = ObservableBuffer[DNAEntry]()
+  private val listView = new ListView[DNAEntry](dataList)
+
+  def getView: ListView[DNAEntry] = listView
+
   def eventEmitters: Seq[EventEmitter] = Seq()
-  val eventHandlers = {
+
+  val eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case event: UpdateDNADisplay =>
-    dataList.clear()
-    dataList ++= event.dna.toEntries
-    Seq()
+      dataList.clear()
+      dataList ++= event.dna.toEntries
+      Seq()
     case DNAEntrySelected(_, dnaEntry) =>
-      DNAEntrySelected(Entities.createOrganismButton, dnaEntry)
+      Seq(DNAEntrySelected(Entities.createOrganismButton, dnaEntry))
     case _ => Seq()
   }
 }
-
