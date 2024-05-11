@@ -7,6 +7,7 @@ import model.events.{
   EventEmitter,
   eventToSeq,
 }
+import model.entities.organisms.{PerishedOrganism}
 import view.OrganismDisplay
 
 case class GameStateManager(gameState: GameState) extends Entity {
@@ -29,12 +30,15 @@ case class GameStateManager(gameState: GameState) extends Entity {
       AddOrganismToDisplay(organism)
     }
     case Perished(organism) => {
+      val perished = PerishedOrganism(organism.id, organism.resources)
       gameState.removeEntity(organism.id)
+      gameState.addEntity(perished)
       RemoveOrganismFromDisplay(organism.id)
+      AddOrganismToDisplay(perished)
     }
     case FindTarget(pf, senderId: Long) => {
       val roll = scala.util.Random.nextInt(100)
-      if (roll < 100) { // 100% chance of finding a plant
+      if (roll < 100) { // 100% chance of finding a target
         val potentialTargets = gameState.entities.collect(pf).toVector
         if(potentialTargets.nonEmpty) {
           val target = potentialTargets(scala.util.Random.nextInt(potentialTargets.size))
@@ -52,3 +56,4 @@ case class GameStateManager(gameState: GameState) extends Entity {
     gameState.processFrame(time)
   }
 }
+

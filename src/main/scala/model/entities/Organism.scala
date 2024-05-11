@@ -12,7 +12,7 @@ import model.resources.{
   Conversion,
 }
 import model.dna.DNA
-import organisms.{Plant, Fungi, Animal}
+import organisms.{Plant, Fungi, Animal, PerishedOrganism}
 
 import scala.collection.mutable
 
@@ -72,7 +72,7 @@ trait Organism extends Entity {
   eventGenerator = (time) => this match {
     case plant: Plant => FindTarget({case (_, o: Fungi) => o}, plant.id)
     case animal: Animal => FindTarget({case (_, o: Plant) => o}, animal.id)
-    case fungi: Fungi => FindTarget({case (_, o: Animal) => o}, fungi.id)
+    case fungi: Fungi => FindTarget({case (_, o: PerishedOrganism) => o}, fungi.id)
   }
   )
   
