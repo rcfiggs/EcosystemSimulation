@@ -31,10 +31,11 @@ case class GameStateManager(gameState: GameState) extends Entity {
     }
     case Perished(organism) => {
       val perished = PerishedOrganism(organism.id, organism.resources)
-      gameState.removeEntity(organism.id)
-      gameState.addEntity(perished)
-      RemoveOrganismFromDisplay(organism.id)
-      AddOrganismToDisplay(perished)
+      gameState.setEntity(perished)
+      Seq(
+        RemoveOrganismFromDisplay(organism.id),
+        AddOrganismToDisplay(perished),
+      )
     }
     case FindTarget(pf, senderId: Long) => {
       val roll = scala.util.Random.nextInt(100)
