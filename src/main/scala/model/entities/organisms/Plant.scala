@@ -1,7 +1,7 @@
 package model.entities.organisms
 
 import model.entities.{Organism}
-import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource}
+import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate}
 import model.resources.{
   Resource, Water, Sunlight, Mycelium, Nutrient, Sugar,
   ProduceSugar, ExtractNutrientFromMycelium,
@@ -38,6 +38,7 @@ object Plant {
       InitialResource(Mycelium) -> 40,
       InitialResource(Nutrient) -> 40,
       InitialResource(Sugar) -> 40,
+      MutationRate -> 3,
     )
   )
 }

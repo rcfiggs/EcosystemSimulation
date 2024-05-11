@@ -4,7 +4,7 @@ import model.resources.{
   Resource, Water, Nutrient, Fat, Protein, Mycelium,
   ProduceMycelium
 }
-import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource}
+import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate}
 import model.entities.Organism
 
 
@@ -28,6 +28,7 @@ object Fungi{
       InitialResource(Fat) -> 10,
       InitialResource(Mycelium) -> 10,
       InitialResource(Nutrient) -> 5,
+      MutationRate -> 3,
     )
   )
 }

@@ -45,7 +45,6 @@ object OrganismSelectionWindow extends Entity {
       case Some(organism) => organism.dna.randomMutations
       case None => Seq() // Handle the case where no organism is selected
     }
-    println(dnaMutations)
 
     val listView = new ListView[DNAMutation](dnaMutations) {
       this.getSelectionModel.selectedItemProperty.addListener { (_, _, newValue) =>

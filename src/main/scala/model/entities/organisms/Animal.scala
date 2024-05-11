@@ -5,7 +5,7 @@ import model.resources.{
   ProduceFat, ProduceProtein
 }
 import model.entities.Organism
-import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource}
+import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate}
 import model.events.Event
 import scala.collection.mutable
 
@@ -36,6 +36,7 @@ object Animal {
       InitialResource(Nutrient) -> 25,
       InitialResource(Protein) -> 25,
       InitialResource(Fat) -> 25,
+      MutationRate -> 3
     )
   )
 }
