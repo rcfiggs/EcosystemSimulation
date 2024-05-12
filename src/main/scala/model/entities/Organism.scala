@@ -2,24 +2,25 @@ package model.entities
 
 import model.events.{
   Event, ResourceLost, ExtractResource, ResourceGain, SpendResources, InsufficientResources,
-  FindTarget, TargetFound, TargetNotFound,
-  UpdateOrganismDisplay, Perished, IsPerished, Reproduce, CreateOrganism,
+  FindTarget, TargetFound, TargetNotFound, 
+  UpdateOrganismDisplay, Perished, IsPerished, Reproduce, CreateOrganism, ResourceDrained,
   EventEmitter, TimedEmitter, ConditionalEmitter,
   eventToSeq,
 }
 import model.resources.{
   Resource, Water,
-  Conversion,
+  Conversion, ResourceContainer,
 }
 import model.dna.DNA
 import organisms.{Plant, Fungi, Animal, PerishedOrganism}
 
 import scala.collection.mutable
 
-trait Organism extends Entity {
+trait Organism extends Entity with ResourceContainer{
   val id: Long = Entities.newId
   val dna: DNA
   var target: Option[Long] = None
+  val displayEventFactory = () => UpdateOrganismDisplay(this)
   
   val resources = mutable.Map[Resource, Int]()
   resources.addAll(dna.initialResources)
@@ -120,28 +121,10 @@ trait Organism extends Entity {
   findTarget,
   )
   
-  def eventHandlers: PartialFunction[Event, Seq[Event]] = {
-    case ResourceLost(_, resource: Resource, amount) => {
-      val cur = resources.getOrElse(resource, 0)
-      resources.update(resource, cur - (cur min amount))
-      if(resources.getOrElse(resource, 0) <= 0) {
-        println(s"$id ${this.getClass.getSimpleName} Died due to lack of ${resource.name}")
-        Perished(this)
-      } else{
-        Seq()
-      } :+ UpdateOrganismDisplay(this)
-    }
-    case ResourceGain(_, resource: Resource, amount) => {
-      val cur = resources.getOrElse(resource, 0)
-      resources.update(resource, cur + amount)
-      Seq(UpdateOrganismDisplay(this))
-    }
-    case ExtractResource(_, resource: Resource, amount, sender) => {
-      val deliverable = resources.getOrElse(resource,0) min amount
-      Seq(
-      ResourceLost(targetId = this.id, resource = resource, amount = deliverable),
-      ResourceGain(targetId = sender.id, resource = resource, amount = deliverable),
-      )
+  def eventHandlers: PartialFunction[Event, Seq[Event]] = resourceContainerEventHandlers orElse {
+    case ResourceDrained(_, resource) => {
+      println(s"$id ${this.getClass.getSimpleName} Died due to lack of ${resource.name}")
+      Seq(Perished(this))
     }
     case SpendResources(targetId, requiredResources: Map[Resource, Int], resultingEvents) => {
       val (sufficient, insufficient) = requiredResources.partition { case (resource, amount) => resources.getOrElse(resource, 0) >= amount }

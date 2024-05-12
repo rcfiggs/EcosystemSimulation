@@ -1,10 +1,11 @@
 package model.events
 
-import model.entities.{Entity, Entities, Organism}
+import model.entities.{Entity, Entities, Organism, Environment}
 import model.entities.organisms.PerishedOrganism
 import model.dna.{DNA, DNAEntry, DNAMutation}
 import model.resources.{Resource, NaturalResource}
 import scala.language.implicitConversions
+import model.entities.Environment
 
 sealed trait Event {
   def targetId: Long
@@ -29,6 +30,12 @@ case class Flood(time: Long, excessRainFall: Int) extends Event{
   override val targetId = Entities.gameStateManager
 }
 
+// Resource Events
+case class ResourceLost(targetId: Long, resource: Resource, amount: Int) extends Event
+case class ResourceGain(targetId: Long, resource: Resource, amount: Int) extends Event
+case class ExtractResource(targetId: Long, resource: Resource, amount: Int, sender: Organism) extends Event
+case class ResourceDrained(targetId: Long, resource: Resource) extends Event
+
 // Organism Events
 case class Reproduce(targetId: Long, dnaMutation: DNAMutation) extends Event
 
@@ -39,9 +46,6 @@ case class TargetFound(targetId: Long, foundId: Long) extends Event
 case class TargetNotFound(targetId: Long) extends Event
 
 case class InsufficientResources(targetId: Long, resources: Map[Resource, Int]) extends Event
-case class ResourceLost(targetId: Long, resource: Resource, amount: Int) extends Event
-case class ResourceGain(targetId: Long, resource: Resource, amount: Int) extends Event
-case class ExtractResource(targetId: Long, resource: Resource, amount: Int, sender: Organism) extends Event
 case class SpendResources(targetId: Long, resources: Map[Resource, Int], resultingEvents: Seq[Event] = Seq.empty) extends Event
 case class Perished(organism: Organism) extends Event{
   override val targetId = Entities.gameStateManager
@@ -52,7 +56,7 @@ case class IsPerished(targetId: Long, organism: PerishedOrganism) extends Event
 case class ButtonPressed(targetId: Long) extends Event
 
 // Environment Display
-case class UpdateEnviornmentDisplay(resource: NaturalResource, value: Int) extends Event {
+case class UpdateEnviornmentDisplay(environment: Environment) extends Event {
   override val targetId = Entities.environmentDisplay
 }
 

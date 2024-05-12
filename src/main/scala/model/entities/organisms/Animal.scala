@@ -9,14 +9,7 @@ import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialReso
 import model.events.Event
 import scala.collection.mutable
 
-
-case class Animal(override val dna: DNA = Animal.dna) extends Organism {  
-  override def eventEmitters = super.eventEmitters :++ Seq()
-  
-  override def eventHandlers: PartialFunction[Event, Seq[Event]] = super.eventHandlers orElse {
-    case _ => Seq()
-  }
-}
+case class Animal(override val dna: DNA = Animal.dna) extends Organism
 
 object Animal {
   val dna: DNA = DNA(

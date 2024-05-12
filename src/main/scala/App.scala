@@ -31,7 +31,7 @@ object SimpleApp extends JFXApp3 {
     gameState.addEntity(OrganismDisplay)
     gameState.addEntity(DNADisplay)
 
-    val environment = Environment
+    val environment = Environment()
     gameState.addEntity(environment)
 
     val organismsHBox = new HBox(10) {
@@ -74,9 +74,8 @@ object SimpleApp extends JFXApp3 {
     gameState.addEntity(gameStateManager)
 
     gameState.addEntity(EnvironmentDisplay)
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(Water, environment.resources(Water)))
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(Nutrient, environment.resources(Nutrient)))
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(Sunlight, environment.resources(Sunlight)))
+    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(environment))
+
     val vbox = new VBox(10) {
       children = Seq(
         Text("Environment"), 
