@@ -27,6 +27,9 @@ case class SurvivalRequirement(resource: Resource) extends DNAProperty {
 case object MutationRate extends DNAProperty{
   override def toString: String = "Mutation Rate"
 }
+case class Decomposition(conversion: Conversion) extends DNAProperty{
+  override def toString: String = s"Decomposition: ${conversion.inputs} -> ${conversion.outputs}"
+}
 
 
 

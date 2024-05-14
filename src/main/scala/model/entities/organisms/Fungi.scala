@@ -2,9 +2,9 @@ package model.entities.organisms
 
 import model.resources.{
   Resource, Water, Nutrient, Fat, Protein, Mycelium,
-  ProduceMycelium
+  ProduceMycelium, DecomposeFat, DecomposeProtein,
 }
-import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate}
+import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate, Decomposition}
 import model.entities.Organism
 import model.dna.SurvivalRequirement
 
@@ -33,6 +33,8 @@ object Fungi{
       InitialResource(Nutrient) -> 5,
       SurvivalRequirement(Water) -> 5,
       SurvivalRequirement(Mycelium) -> 1,
+      Decomposition(DecomposeFat) -> 1,
+      Decomposition(DecomposeProtein) -> 1,
       MutationRate -> 3,
     )
   )

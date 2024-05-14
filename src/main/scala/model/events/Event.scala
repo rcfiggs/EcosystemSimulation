@@ -40,6 +40,8 @@ case class ResourceGain(targetId: Long, resource: Resource, amount: Int) extends
 case class ExtractResource(targetId: Long, resource: Resource, amount: Int, sender: Organism) extends Event
 case class ResourceDrained(targetId: Long, resource: Resource) extends Event
 
+case class DecomposeResource(resource: Resource, amount: Int) extends Event
+
 // Organism Events
 case class Reproduce(targetId: Long, dnaMutation: DNAMutation) extends Event
 
