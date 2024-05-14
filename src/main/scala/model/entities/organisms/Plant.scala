@@ -9,6 +9,7 @@ import model.resources.{
 import model.events.Event
 import scala.collection.mutable
 import scala.collection.immutable
+import model.dna.SurvivalRequirement
 
 case class Plant(val dna: DNA = Plant.dna) extends Organism {
   override val targetable = (o: Organism) => o.isInstanceOf[Fungi]
@@ -39,6 +40,9 @@ object Plant {
       InitialResource(Mycelium) -> 40,
       InitialResource(Nutrient) -> 40,
       InitialResource(Sugar) -> 40,
+      SurvivalRequirement(Water) -> 5,
+      SurvivalRequirement(Sugar) -> 5,
+      SurvivalRequirement(Nutrient) -> 1,
       MutationRate -> 3,
     )
   )

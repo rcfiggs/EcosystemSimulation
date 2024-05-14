@@ -16,15 +16,14 @@ trait ResourceContainer {
       Seq(ResourceDrained(self.id, resource))
     } else {
       Seq()
-    }
+    } ++ Seq(displayEventFactory())
   }
 
   def resourceContainerEventHandlers: PartialFunction[Event, Seq[Event]] = {
     case ExtractResource(_, resource: Resource, amount, sender) => {
       val deliverable = resources.getOrElse(resource, 0) min amount
       updateResources(resource, -deliverable) ++ Seq(
-        ResourceGain(targetId = sender.id, resource = resource, amount = deliverable),
-        displayEventFactory(),
+        ResourceGain(targetId = sender.id, resource = resource, amount = deliverable)
       )
     }
     case ResourceGain(_, resource: Resource, amount) => {

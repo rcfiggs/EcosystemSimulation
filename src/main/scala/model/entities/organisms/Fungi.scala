@@ -6,6 +6,7 @@ import model.resources.{
 }
 import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate}
 import model.entities.Organism
+import model.dna.SurvivalRequirement
 
 
 case class Fungi(override val dna: DNA = Fungi.dna) extends Organism{
@@ -30,6 +31,8 @@ object Fungi{
       InitialResource(Fat) -> 10,
       InitialResource(Mycelium) -> 10,
       InitialResource(Nutrient) -> 5,
+      SurvivalRequirement(Water) -> 5,
+      SurvivalRequirement(Mycelium) -> 1,
       MutationRate -> 3,
     )
   )

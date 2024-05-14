@@ -21,9 +21,14 @@ case class Capacity(resource: Resource) extends DNAProperty{
 case class InitialResource(resource: Resource) extends DNAProperty{
   override def toString: String = s"Initial Resource: $resource"
 }
+case class SurvivalRequirement(resource: Resource) extends DNAProperty {
+  override def toString: String = s"Survival Requirement: $resource"
+}
 case object MutationRate extends DNAProperty{
   override def toString: String = "Mutation Rate"
 }
+
+
 
 case class DNA (
 val properties: Map[DNAProperty, Int]
@@ -54,6 +59,7 @@ val properties: Map[DNAProperty, Int]
   val extractionRate: Map[Resource, Int] = properties.collect { case (Consumption(resource), amount) => resource -> amount }
   val synthesisRate: Map[Conversion, Int] = properties.collect { case (Synthesis(conversion), amount) => conversion -> amount }
   val resourceCapacities: Map[Resource, Int] = properties.collect { case (Capacity(resource), amount) => resource -> amount }
+  val survivalRequirements: Map[Resource, Int] = properties.collect { case (SurvivalRequirement(resource), amount) => resource -> amount }
 }
 
 case class DNAEntry(property: DNAProperty, value: Int) {
