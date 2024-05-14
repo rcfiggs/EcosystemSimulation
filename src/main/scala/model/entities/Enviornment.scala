@@ -9,6 +9,7 @@ import model.events.{
 
 import scala.collection.mutable.Map
 import model.resources.ResourceContainer
+import model.events.ReturnResourcesToEnvironment
 
 case class Environment() extends Entity with ResourceContainer {
   val id: Long = Entities.environment
@@ -30,6 +31,12 @@ case class Environment() extends Entity with ResourceContainer {
   )
 
   def eventHandlers: PartialFunction[Event, Seq[Event]] = resourceContainerEventHandlers orElse {
+    case ReturnResourcesToEnvironment(resources) => {
+      println(s"environment losinng resources $resources")
+      resources.map {
+        case (resource, amount) => ResourceGain(this.id, resource, amount)
+      }.toSeq
+    }
     case Rainfall(time, amount) => {
       val excessRainfall = math.max(0, resources(Water) + amount - maxWaterInSoil)
       resources.update(Water, math.min(resources(Water) + amount, maxWaterInSoil))

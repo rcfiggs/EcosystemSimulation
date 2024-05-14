@@ -8,18 +8,20 @@ import model.events.{
   eventToSeq,
 }
 import model.resources.{
-  Resource, Water,
+  Resource, Water, Nutrient,
   Conversion, ResourceContainer,
 }
 import model.dna.DNA
 import organisms.{Plant, Fungi, Animal, PerishedOrganism}
 
 import scala.collection.mutable
+import model.events.ReturnResourcesToEnvironment
 
 trait Organism extends Entity with ResourceContainer{
   val id: Long = Entities.newId
   val dna: DNA
   var target: Option[Long] = None
+  val targetable: Organism => Boolean
   val displayEventFactory = () => UpdateOrganismDisplay(this)
   
   val resources = mutable.Map[Resource, Int]()
@@ -69,12 +71,11 @@ trait Organism extends Entity with ResourceContainer{
   )
   
   val findTarget = TimedEmitter(
-  frequency = 1000,
-  eventGenerator = (time) => this match {
-    case plant: Plant => FindTarget({case (_, o: Fungi) => o}, plant.id)
-    case animal: Animal => FindTarget({case (_, o: Plant) => o}, animal.id)
-    case fungi: Fungi => FindTarget({case (_, o: PerishedOrganism) => o}, fungi.id)
-  }
+    frequency = 1000,
+    eventGenerator = (time) => {
+      val predicate = this.targetable
+      FindTarget(predicate, this.id)
+    }
   )
   
   val synthesize = TimedEmitter(
@@ -115,7 +116,7 @@ trait Organism extends Entity with ResourceContainer{
   )
   
   def eventEmitters: Seq[EventEmitter] = Seq(
-  waterLossEmitter,
+  // waterLossEmitter,
   synthesize,
   collect,
   findTarget,
@@ -124,7 +125,14 @@ trait Organism extends Entity with ResourceContainer{
   def eventHandlers: PartialFunction[Event, Seq[Event]] = resourceContainerEventHandlers orElse {
     case ResourceDrained(_, resource) => {
       println(s"$id ${this.getClass.getSimpleName} Died due to lack of ${resource.name}")
-      Seq(Perished(this))
+      val resourcesToReturn = resources.filter {
+        case (resource, _) => resource == Water || resource == Nutrient
+      }.toMap
+      resources --= resourcesToReturn.keySet // Remove the resources from the organism
+      Seq(
+      Perished(this),
+      ReturnResourcesToEnvironment(resourcesToReturn)
+      )
     }
     case SpendResources(targetId, requiredResources: Map[Resource, Int], resultingEvents) => {
       val (sufficient, insufficient) = requiredResources.partition { case (resource, amount) => resources.getOrElse(resource, 0) >= amount }

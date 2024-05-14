@@ -9,7 +9,9 @@ import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialReso
 import model.events.Event
 import scala.collection.mutable
 
-case class Animal(override val dna: DNA = Animal.dna) extends Organism
+case class Animal(override val dna: DNA = Animal.dna) extends Organism {
+  override val targetable = (o: Organism) => o.isInstanceOf[Plant]
+}
 
 object Animal {
   val dna: DNA = DNA(

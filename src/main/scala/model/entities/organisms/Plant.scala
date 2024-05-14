@@ -11,6 +11,7 @@ import scala.collection.mutable
 import scala.collection.immutable
 
 case class Plant(val dna: DNA = Plant.dna) extends Organism {
+  override val targetable = (o: Organism) => o.isInstanceOf[Fungi]
   
   override def eventEmitters = super.eventEmitters :++ Seq()
   

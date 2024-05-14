@@ -8,7 +8,9 @@ import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialReso
 import model.entities.Organism
 
 
-case class Fungi(override val dna: DNA = Fungi.dna) extends Organism
+case class Fungi(override val dna: DNA = Fungi.dna) extends Organism{
+  override val targetable = (o: Organism) => o.isInstanceOf[PerishedOrganism]
+}
 
 object Fungi{
   val dna: DNA = DNA(

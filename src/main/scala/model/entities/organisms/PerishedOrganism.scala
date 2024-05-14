@@ -14,6 +14,7 @@ case class PerishedOrganism(
   override val resources: scala.collection.mutable.Map[Resource,Int],
   override val dna: DNA = DNA(properties = Map()),
   ) extends Organism {
+  override val targetable = (o: Organism) => false
   override val eventEmitters: Seq[EventEmitter] = Seq()
   override def eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case ExtractResource(_, resource, amount, sender) =>

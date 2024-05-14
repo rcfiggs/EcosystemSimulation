@@ -37,10 +37,10 @@ case class GameStateManager(gameState: GameState) extends Entity {
         AddOrganismToDisplay(perished),
       )
     }
-    case FindTarget(pf, senderId: Long) => {
+    case FindTarget(targetable, senderId: Long) => {
       val roll = scala.util.Random.nextInt(100)
       if (roll < 100) { // 100% chance of finding a target
-        val potentialTargets = gameState.entities.collect(pf).toVector
+        val potentialTargets = gameState.entities.values.collect { case o: Organism if targetable(o) => o }.toVector
         if(potentialTargets.nonEmpty) {
           val target = potentialTargets(scala.util.Random.nextInt(potentialTargets.size))
           TargetFound(targetId = senderId, foundId = target.id)
