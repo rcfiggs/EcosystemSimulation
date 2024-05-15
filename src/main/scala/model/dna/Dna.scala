@@ -63,7 +63,10 @@ val properties: Map[DNAProperty, Int]
   val synthesisRate: Map[Conversion, Int] = properties.collect { case (Synthesis(conversion), amount) => conversion -> amount }
   val resourceCapacities: Map[Resource, Int] = properties.collect { case (Capacity(resource), amount) => resource -> amount }
   val survivalRequirements: Map[Resource, Int] = properties.collect { case (SurvivalRequirement(resource), amount) => resource -> amount }
+  val decompositionRate: Map[Conversion, Int] = properties.collect { case (Decomposition(conversion), amount) => conversion -> amount }
+
 }
+
 
 case class DNAEntry(property: DNAProperty, value: Int) {
   override def toString: String = s"$property ($value)"

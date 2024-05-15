@@ -3,7 +3,7 @@ package model.events
 import model.entities.{Entity, Entities, Organism, Environment}
 import model.entities.organisms.PerishedOrganism
 import model.dna.{DNA, DNAEntry, DNAMutation}
-import model.resources.{Resource, NaturalResource}
+import model.resources.{Resource, NaturalResource, Conversion}
 import scala.language.implicitConversions
 import model.entities.Environment
 
@@ -40,7 +40,7 @@ case class ResourceGain(targetId: Long, resource: Resource, amount: Int) extends
 case class ExtractResource(targetId: Long, resource: Resource, amount: Int, sender: Organism) extends Event
 case class ResourceDrained(targetId: Long, resource: Resource) extends Event
 
-case class DecomposeResource(resource: Resource, amount: Int) extends Event
+case class DecomposeResource(targetId: Long, conversion: Conversion, amount: Int) extends Event
 
 // Organism Events
 case class Reproduce(targetId: Long, dnaMutation: DNAMutation) extends Event

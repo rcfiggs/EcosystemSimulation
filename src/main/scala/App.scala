@@ -18,7 +18,7 @@ import model.GameState
 import model.entities.{Entity, Entities, GameStateManager, Organism}
 import model.entities.organisms.{Plant, Animal, Fungi}
 import model.dna.{DNAEntry}
-import model.events.{Event, UpdateOrganismDisplay, UpdateEnviornmentDisplay}
+import model.events.{Event, UpdateOrganismDisplay, UpdateEnviornmentDisplay, Perished}
 import model.resources.{Water, Nutrient, Sunlight}
 import view.OrganismSelectionWindow
 
@@ -72,6 +72,11 @@ object SimpleApp extends JFXApp3 {
     
     val gameStateManager = GameStateManager(gameState)
     gameState.addEntity(gameStateManager)
+
+    val perishedAnimal = new Animal()
+    gameState.addEntity(perishedAnimal)
+    gameState.getEntity(Entities.gameStateManager).events.enqueue(Perished(perishedAnimal))
+
 
     gameState.addEntity(EnvironmentDisplay)
     gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(environment))

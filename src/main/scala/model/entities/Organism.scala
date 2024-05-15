@@ -31,6 +31,7 @@ trait Organism extends Entity with ResourceContainer{
   val synthesisRate: Map[Conversion, Int] = dna.synthesisRate
   val resourceCapacities: Map[Resource, Int] = dna.resourceCapacities
   val survivalRequirements: Map[Resource, Int] = dna.survivalRequirements
+  val decompositionRate: Map[Conversion, Int] = dna.decompositionRate
   
   val waterLossEmitter = TimedEmitter(
   frequency = 5000,

@@ -3,14 +3,35 @@ package model.entities.organisms
 import model.resources.{
   Resource, Water, Nutrient, Fat, Protein, Mycelium,
   ProduceMycelium, DecomposeFat, DecomposeProtein,
+  Conversion,
 }
 import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate, Decomposition}
 import model.entities.Organism
 import model.dna.SurvivalRequirement
+import model.events.{TimedEmitter, DecomposeResource}
 
 
 case class Fungi(override val dna: DNA = Fungi.dna) extends Organism{
   override val targetable = (o: Organism) => o.isInstanceOf[PerishedOrganism]
+
+  val decompose = TimedEmitter(
+    frequency = 1000,
+    eventGenerator = (time) => {
+      target match {
+        case Some(targetId) =>
+          decompositionRate.toSeq.flatMap { 
+            case (conv: Conversion, maxAmount) => {
+              Seq(DecomposeResource(targetId = targetId, conversion = conv, amount = maxAmount))
+            }
+          }
+        case None => Seq()
+      }
+    }
+  )
+
+  override val eventEmitters = super.eventEmitters ++ Seq(
+    decompose,
+  )
 }
 
 object Fungi{
