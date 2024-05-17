@@ -8,9 +8,4 @@ class AnimalSuite extends AnyFunSuite {
     val animal = Animal()
     assert(animal.dna === Animal.dna)
   }
-
-  test("An Animal should have the correct initial resources") {
-    val animal = Animal()
-    assert(animal.initialResources === Animal.initialResources)
-  }
 }

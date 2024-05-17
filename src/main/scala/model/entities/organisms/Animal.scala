@@ -5,12 +5,12 @@ import model.resources.{
   ProduceFat, ProduceProtein
 }
 import model.entities.Organism
-import model.dna.DNA
+import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate}
 import model.events.Event
 import scala.collection.mutable
 
 
-case class Animal(override val dna: DNA = Animal.dna, override val initialResources: Map[Resource, Int] = Animal.initialResources) extends Organism {  
+case class Animal(override val dna: DNA = Animal.dna) extends Organism {  
   override def eventEmitters = super.eventEmitters :++ Seq()
   
   override def eventHandlers: PartialFunction[Event, Seq[Event]] = super.eventHandlers orElse {
@@ -20,30 +20,23 @@ case class Animal(override val dna: DNA = Animal.dna, override val initialResour
 
 object Animal {
   val dna: DNA = DNA(
-    intake = Map(
-      Water -> 16,
-    ),
-    extraction = Map(
-      Sugar -> 8,
-      Nutrient -> 1,
-    ),
-    capacity = Map(
-      Water -> 50,
-      Sugar -> 50,
-      Nutrient -> 50,
-      Protein -> 50,
-      Fat -> 50,
-    ),
-    synthesis = Map(
-      ProduceFat -> 8,
-      ProduceProtein -> 2,
+    properties = Map(
+      Extraction(Water) -> 16,
+      Consumption(Sugar) -> 8,
+      Consumption(Nutrient) -> 1,
+      Capacity(Water) -> 50,
+      Capacity(Sugar) -> 50,
+      Capacity(Nutrient) -> 50,
+      Capacity(Protein) -> 50,
+      Capacity(Fat) -> 50,
+      Synthesis(ProduceFat) -> 8,
+      Synthesis(ProduceProtein) -> 2,
+      InitialResource(Water) -> 25,
+      InitialResource(Sugar) -> 25,
+      InitialResource(Nutrient) -> 25,
+      InitialResource(Protein) -> 25,
+      InitialResource(Fat) -> 25,
+      MutationRate -> 3
     )
-  )
-  val initialResources: Map[Resource, Int] = Map(
-  Water -> 25,
-  Sugar -> 25,
-  Nutrient -> 25,
-  Protein -> 25,
-  Fat -> 25,
   )
 }

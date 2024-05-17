@@ -1,7 +1,7 @@
 package model.entities
 
 import model.resources._
-import model.dna.{DNA, IntakeEntry, ExtractionEntry, SynthesisEntry, CapacityEntry}
+import model.dna.{DNA}
 
 import org.scalatest.flatspec.AnyFlatSpec 
 import org.scalatest.funsuite.AnyFunSuite

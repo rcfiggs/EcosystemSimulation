@@ -9,7 +9,7 @@ import model.events.{
 }
 import model.resources.Resource
 
-case class PerishedOrganism(override val id: Long, override val dna: DNA, override val initialResources: Map[Resource, Int] = Map()) extends Organism {
+case class PerishedOrganism(override val id: Long, override val dna: DNA) extends Organism {
   override val eventEmitters: Seq[EventEmitter] = Seq()
   override def eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case ExtractResource(_, resource, amount, sender) =>

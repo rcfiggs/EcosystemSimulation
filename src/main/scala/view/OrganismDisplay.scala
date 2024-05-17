@@ -16,24 +16,27 @@ import javafx.beans.value.ObservableValue
 import scalafx.scene.control.ListCell
 
 
-class OrganismDisplay(val dataList: ObservableBuffer[Organism], listView: ListView[Organism]) extends Entity {
+object OrganismDisplay extends Entity {
   override val id = Entities.organismDisplay
-  val organismMap: mutable.Map[Long, Int] = mutable.Map[Long,Int]()
-  
-  listView.getSelectionModel.selectedIndexProperty.addListener(new ChangeListener[Number] {
-    override def changed(observable: ObservableValue[? <: Number], oldIndex: Number, newIndex: Number): Unit = {
-      val selectedOrganism = listView.getSelectionModel.getSelectedItem
-      if (selectedOrganism != null) {
-        events.enqueue(OrganismSelected(id, selectedOrganism))
-      }
+
+  private val dataList = ObservableBuffer[Organism]()
+  private val listView = new ListView[Organism](dataList)
+  private val organismMap: mutable.Map[Long, Int] = mutable.Map[Long,Int]()
+
+  def getView: ListView[Organism] = listView
+
+  listView.getSelectionModel.selectedItemProperty.addListener { (_, _, newValue) =>
+    if (newValue != null) {
+      events.enqueue(OrganismSelected(id, newValue))
     }
-  })
+  }
   listView.cellFactory = (cell: ListCell[Organism], organism: Organism) => {
     cell.text = organism.display
   }
-  
+
   def eventEmitters: Seq[EventEmitter] = Seq()
-  val eventHandlers = {
+
+  val eventHandlers: PartialFunction[Event, Seq[Event]] = {
     case AddOrganismToDisplay(organism) => {
       val index = dataList.indexWhere(_.getClass.getSimpleName > organism.getClass.getSimpleName)
       if (index == -1) {
@@ -80,7 +83,7 @@ class OrganismDisplay(val dataList: ObservableBuffer[Organism], listView: ListVi
     case OrganismSelected(_, organism) => {
       Seq(
       UpdateDNADisplay(organism.dna),
-      OrganismSelected(Entities.createOrganismButton, organism)
+      OrganismSelected(Entities.createOrganismWindow, organism)
       )
     }
     case RemoveFromDisplay(id) => {

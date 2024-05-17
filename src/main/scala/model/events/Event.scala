@@ -2,7 +2,7 @@ package model.events
 
 import model.entities.{Entity, Entities, Organism}
 import model.entities.organisms.PerishedOrganism
-import model.dna.{DNA, DNAEntry}
+import model.dna.{DNA, DNAEntry, DNAMutation}
 import model.resources.{Resource, NaturalResource}
 import scala.language.implicitConversions
 
@@ -14,18 +14,13 @@ sealed trait Event {
 implicit def eventToSeq(event: Event): Seq[Event] = Seq(event)
 
 // Game State Manager Events
-case class CreateOrganism(newOrganism: () => Organism) extends Event{
+sealed trait GameStateManagerEvent extends Event {
   override val targetId = Entities.gameStateManager
 }
-
-case object Play extends Event {
-  override val targetId = Entities.gameStateManager
-}
-
-case object Pause extends Event {
-  override val targetId = Entities.gameStateManager
-}
-
+case class CreateOrganism(newOrganism: () => Organism) extends GameStateManagerEvent
+case object Play extends GameStateManagerEvent 
+case object Pause extends GameStateManagerEvent 
+case class Forward(events: Seq[Event]) extends GameStateManagerEvent 
 // Environment Events
 case class Rainfall(time: Long, amount: Int) extends Event {
   override val targetId = Entities.environment
@@ -35,7 +30,7 @@ case class Flood(time: Long, excessRainFall: Int) extends Event{
 }
 
 // Organism Events
-case class Reproduce(targetId: Long, dnaEntry: DNAEntry) extends Event
+case class Reproduce(targetId: Long, dnaMutation: DNAMutation) extends Event
 
 case class FindTarget[O <: Organism](pf: PartialFunction[(Long, Entity), O], senderId: Long) extends Event {
   override val targetId = Entities.gameStateManager
