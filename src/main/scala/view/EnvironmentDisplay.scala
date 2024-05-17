@@ -16,23 +16,28 @@ import scalafx.scene.control.ListCell
 
 object EnvironmentDisplay extends Entity {
   override val id = Entities.environmentDisplay
-
+  
   private val dataList = ObservableBuffer[String]()
   private val listView = new ListView[String](dataList)
   private val propertyMap = mutable.Map[NaturalResource, Int]()
   
   def getView: ListView[String] = listView
-
+  
   def eventEmitters: Seq[EventEmitter] = Seq()
-
+  
   val eventHandlers: PartialFunction[Event, Seq[Event]] = {
-    case event: UpdateEnviornmentDisplay => {
-      if(propertyMap.contains(event.resource)){
-        dataList.update(propertyMap(event.resource), s"${event.resource}: ${event.value}") // replace name with data to be displayed
-      } else {
-        propertyMap(event.resource) = dataList.size
-        dataList.add(s"${event.resource}: ${event.value}")
-      }
+    case UpdateEnviornmentDisplay(environment) => {
+      environment.resources.foreach {
+        case (resource: NaturalResource, amount) => {
+          if(propertyMap.contains(resource)){
+            dataList.update(propertyMap(resource), s"${resource}: ${amount}") // replace name with data to be displayed
+          } else {
+            propertyMap(resource) = dataList.size
+            dataList.add(s"${resource}: ${amount}")
+          }
+        }
+        case _ => {}
+      }  
       Seq()
     }
   }

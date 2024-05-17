@@ -18,7 +18,7 @@ import model.GameState
 import model.entities.{Entity, Entities, GameStateManager, Organism}
 import model.entities.organisms.{Plant, Animal, Fungi}
 import model.dna.{DNAEntry}
-import model.events.{Event, UpdateOrganismDisplay, UpdateEnviornmentDisplay}
+import model.events.{Event, UpdateOrganismDisplay, UpdateEnviornmentDisplay, Perished}
 import model.resources.{Water, Nutrient, Sunlight}
 import view.OrganismSelectionWindow
 
@@ -31,7 +31,7 @@ object SimpleApp extends JFXApp3 {
     gameState.addEntity(OrganismDisplay)
     gameState.addEntity(DNADisplay)
 
-    val environment = Environment
+    val environment = Environment()
     gameState.addEntity(environment)
 
     val organismsHBox = new HBox(10) {
@@ -73,10 +73,14 @@ object SimpleApp extends JFXApp3 {
     val gameStateManager = GameStateManager(gameState)
     gameState.addEntity(gameStateManager)
 
+    val perishedAnimal = new Animal()
+    gameState.addEntity(perishedAnimal)
+    gameState.getEntity(Entities.gameStateManager).events.enqueue(Perished(perishedAnimal))
+
+
     gameState.addEntity(EnvironmentDisplay)
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(Water, environment.resources(Water)))
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(Nutrient, environment.resources(Nutrient)))
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(Sunlight, environment.resources(Sunlight)))
+    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(environment))
+
     val vbox = new VBox(10) {
       children = Seq(
         Text("Environment"), 

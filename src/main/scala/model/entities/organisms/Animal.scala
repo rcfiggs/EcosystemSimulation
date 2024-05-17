@@ -8,14 +8,10 @@ import model.entities.Organism
 import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate}
 import model.events.Event
 import scala.collection.mutable
+import model.dna.SurvivalRequirement
 
-
-case class Animal(override val dna: DNA = Animal.dna) extends Organism {  
-  override def eventEmitters = super.eventEmitters :++ Seq()
-  
-  override def eventHandlers: PartialFunction[Event, Seq[Event]] = super.eventHandlers orElse {
-    case _ => Seq()
-  }
+case class Animal(override val dna: DNA = Animal.dna) extends Organism {
+  override val targetable = (o: Organism) => o.isInstanceOf[Plant]
 }
 
 object Animal {
@@ -36,7 +32,9 @@ object Animal {
       InitialResource(Nutrient) -> 25,
       InitialResource(Protein) -> 25,
       InitialResource(Fat) -> 25,
-      MutationRate -> 3
+      SurvivalRequirement(Water) -> 5,
+      SurvivalRequirement(Protein) -> 1,
+      MutationRate -> 3,
     )
   )
 }

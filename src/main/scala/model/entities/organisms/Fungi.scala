@@ -2,13 +2,37 @@ package model.entities.organisms
 
 import model.resources.{
   Resource, Water, Nutrient, Fat, Protein, Mycelium,
-  ProduceMycelium
+  ProduceMycelium, DecomposeFat, DecomposeProtein,
+  Conversion,
 }
-import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate}
+import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate, Decomposition}
 import model.entities.Organism
+import model.dna.SurvivalRequirement
+import model.events.{TimedEmitter, DecomposeResource}
 
 
-case class Fungi(override val dna: DNA = Fungi.dna) extends Organism
+case class Fungi(override val dna: DNA = Fungi.dna) extends Organism{
+  override val targetable = (o: Organism) => o.isInstanceOf[PerishedOrganism]
+
+  val decompose = TimedEmitter(
+    frequency = 1000,
+    eventGenerator = (time) => {
+      target match {
+        case Some(targetId) =>
+          decompositionRate.toSeq.flatMap { 
+            case (conv: Conversion, maxAmount) => {
+              Seq(DecomposeResource(targetId = targetId, conversion = conv, amount = maxAmount))
+            }
+          }
+        case None => Seq()
+      }
+    }
+  )
+
+  override val eventEmitters = super.eventEmitters ++ Seq(
+    decompose,
+  )
+}
 
 object Fungi{
   val dna: DNA = DNA(
@@ -28,6 +52,10 @@ object Fungi{
       InitialResource(Fat) -> 10,
       InitialResource(Mycelium) -> 10,
       InitialResource(Nutrient) -> 5,
+      SurvivalRequirement(Water) -> 5,
+      SurvivalRequirement(Mycelium) -> 1,
+      Decomposition(DecomposeFat) -> 1,
+      Decomposition(DecomposeProtein) -> 1,
       MutationRate -> 3,
     )
   )
