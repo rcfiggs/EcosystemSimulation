@@ -2,7 +2,7 @@ package model.entities
 
 import model.events.{
   Event, CreateOrganism, UpdateOrganismDisplay, Perished, 
-  FindTarget, TargetFound, TargetNotFound,
+  FindTarget, TargetFound, TargetNotFound, Forward,
   EventEmitter,
 }
 import model.GameState
@@ -14,10 +14,18 @@ trait Entity {
   def eventEmitters: Seq[EventEmitter]
   val events: mutable.Queue[Event] = mutable.Queue[Event]()
   def eventHandlers: PartialFunction[Event, Seq[Event]]
-  
-  def update(): Seq[Event] = {
-    events.dequeueAll(_ => true).flatMap(event => eventHandlers.lift(event).getOrElse(Seq()))
+  private val commonEventHandlers: PartialFunction[Event, Seq[Event]] = {
+    case Forward(events) => events
   }
+
+  def update(): Seq[Event] = {
+    events.dequeueAll(_ => true).flatMap(event =>
+      commonEventHandlers.lift(event)
+        .orElse(eventHandlers.lift(event))
+        .getOrElse(Seq())
+    )
+  }
+
   def process(time: Long): Seq[Event] = {
     eventEmitters.flatMap(_.emit(time))
   }
@@ -32,7 +40,8 @@ object Entities {
   val environment = 6
   val environmentDisplay = 7
   val dnaDisplay = 8
-  var nextId: Long = 9
+  val createOrganismWindow = 9
+  var nextId: Long = 10
   def newId: Long = {
     val id = nextId
     nextId += 1

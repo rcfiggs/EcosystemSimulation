@@ -38,6 +38,16 @@ case object ProduceMycelium extends Conversion {
   override def outputs: Map[Resource, Int] = Map(Mycelium -> 1)
 }
 
+case object DecomposeFat extends Conversion {
+  override def inputs: Map[Resource, Int] = Map(Fat -> 1)
+  override def outputs: Map[Resource, Int] = Map(Water -> 2, Sugar -> 1)
+}
+
+case object DecomposeProtein extends Conversion {
+  override def inputs: Map[Resource, Int] = Map(Protein -> 1)
+  override def outputs: Map[Resource, Int] = Map(Sugar -> 1, Nutrient -> 1)
+}
+
 case class TestConversion(
   override val inputs: Map[Resource, Int] = Map(),
   override val outputs: Map[Resource, Int] = Map(),

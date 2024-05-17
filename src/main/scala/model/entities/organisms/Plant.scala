@@ -1,7 +1,7 @@
 package model.entities.organisms
 
 import model.entities.{Organism}
-import model.dna.DNA
+import model.dna.{DNA, Extraction, Consumption, Capacity, Synthesis, InitialResource, MutationRate}
 import model.resources.{
   Resource, Water, Sunlight, Mycelium, Nutrient, Sugar,
   ProduceSugar, ExtractNutrientFromMycelium,
@@ -9,8 +9,10 @@ import model.resources.{
 import model.events.Event
 import scala.collection.mutable
 import scala.collection.immutable
+import model.dna.SurvivalRequirement
 
-case class Plant(val dna: DNA = Plant.dna, val initialResources: Map[Resource, Int] = Plant.initialResources) extends Organism {
+case class Plant(val dna: DNA = Plant.dna) extends Organism {
+  override val targetable = (o: Organism) => o.isInstanceOf[Fungi]
   
   override def eventEmitters = super.eventEmitters :++ Seq()
   
@@ -22,30 +24,26 @@ case class Plant(val dna: DNA = Plant.dna, val initialResources: Map[Resource, I
 
 object Plant {
   val dna = DNA(
-    intake = Map(
-    Water -> 32,
-    Sunlight -> 16,
-    ),
-    extraction = Map(
-      Mycelium -> 1,
-    ),
-    capacity = Map(
-    Water -> 100,
-    Sunlight -> 100,
-    Mycelium -> 100,
-    Nutrient -> 100,
-    Sugar -> 100,
-    ),
-    synthesis = Map(
-    ProduceSugar -> 16,
-    ExtractNutrientFromMycelium -> 2,
+    properties = Map(
+      Extraction(Water) -> 32,
+      Extraction(Sunlight) -> 16,
+      Consumption(Mycelium) -> 1,
+      Capacity(Water) -> 100,
+      Capacity(Sunlight) -> 100,
+      Capacity(Mycelium) -> 100,
+      Capacity(Nutrient) -> 100,
+      Capacity(Sugar) -> 100,
+      Synthesis(ProduceSugar) -> 16,
+      Synthesis(ExtractNutrientFromMycelium) -> 2,
+      InitialResource(Water) -> 40,
+      InitialResource(Sunlight) -> 40,
+      InitialResource(Mycelium) -> 40,
+      InitialResource(Nutrient) -> 40,
+      InitialResource(Sugar) -> 40,
+      SurvivalRequirement(Water) -> 5,
+      SurvivalRequirement(Sugar) -> 5,
+      SurvivalRequirement(Nutrient) -> 1,
+      MutationRate -> 3,
     )
-  )
-  val initialResources: Map[Resource, Int] = Map(
-  Water -> 40,
-  Sunlight -> 40,
-  Mycelium -> 40,
-  Nutrient -> 40,
-  Sugar -> 40,
   )
 }

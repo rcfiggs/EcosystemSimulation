@@ -2,32 +2,36 @@ package model.entities
 
 import model.events.{
   Event, ResourceLost, ExtractResource, ResourceGain, SpendResources, InsufficientResources,
-  FindTarget, TargetFound, TargetNotFound,
-  UpdateOrganismDisplay, Perished, IsPerished, Reproduce, CreateOrganism,
+  FindTarget, TargetFound, TargetNotFound, 
+  UpdateOrganismDisplay, Perished, IsPerished, Reproduce, CreateOrganism, ResourceDrained,
   EventEmitter, TimedEmitter, ConditionalEmitter,
   eventToSeq,
 }
 import model.resources.{
-  Resource, Water,
-  Conversion,
+  Resource, Water, Nutrient,
+  Conversion, ResourceContainer,
 }
 import model.dna.DNA
-import organisms.{Plant, Fungi, Animal}
+import organisms.{Plant, Fungi, Animal, PerishedOrganism}
 
 import scala.collection.mutable
+import model.events.ReturnResourcesToEnvironment
 
-trait Organism extends Entity {
+trait Organism extends Entity with ResourceContainer{
   val id: Long = Entities.newId
-  val initialResources: Map[Resource, Int]
   val dna: DNA
   var target: Option[Long] = None
+  val targetable: Organism => Boolean
+  val displayEventFactory = () => UpdateOrganismDisplay(this)
   
   val resources = mutable.Map[Resource, Int]()
-  resources.addAll(initialResources)
-  val intakeRate: Map[Resource, Int] = dna.intake
-  val extractionRate: Map[Resource, Int] = dna.extraction
-  val synthesisRate: Map[Conversion, Int] = dna.synthesis
-  val resourceCapacities: Map[Resource, Int] = dna.capacity
+  resources.addAll(dna.initialResources)
+  val intakeRate: Map[Resource, Int] = dna.intakeRate
+  val extractionRate: Map[Resource, Int] = dna.extractionRate
+  val synthesisRate: Map[Conversion, Int] = dna.synthesisRate
+  val resourceCapacities: Map[Resource, Int] = dna.resourceCapacities
+  val survivalRequirements: Map[Resource, Int] = dna.survivalRequirements
+  val decompositionRate: Map[Conversion, Int] = dna.decompositionRate
   
   val waterLossEmitter = TimedEmitter(
   frequency = 5000,
@@ -69,80 +73,75 @@ trait Organism extends Entity {
   )
   
   val findTarget = TimedEmitter(
-  frequency = 1000,
-  eventGenerator = (time) => this match {
-    case plant: Plant => FindTarget({case (_, o: Fungi) => o}, plant.id)
-    case animal: Animal => FindTarget({case (_, o: Plant) => o}, animal.id)
-    case fungi: Fungi => FindTarget({case (_, o: Animal) => o}, fungi.id)
-  }
+    frequency = 1000,
+    eventGenerator = (time) => {
+      val predicate = this.targetable
+      FindTarget(predicate, this.id)
+    }
   )
   
   val synthesize = TimedEmitter(
-  frequency = 1000,
-  eventGenerator = (time) => {
-    synthesisRate.toSeq.flatMap { 
-      case(conv: Conversion, maxAmount) => {
-        val currentResourceAmounts = resources
-        val gainedAmount = conv.inputs.map { case (resource, quantity) => (currentResourceAmounts.getOrElse(resource, 0) - 1) / quantity }.min
-        val amount = gainedAmount min maxAmount
-        if (amount > 0) {
-          val spentResources = conv.inputs.map { case (resource, quantity) => resource -> quantity * amount }
-          val gainedResources = conv.outputs.map { case (resource, quantity) => resource -> quantity * amount }
-          
-          // Check if the organism has enough resources to spend
-          val canSpend = spentResources forall { case (resource, amount) => currentResourceAmounts.getOrElse(resource, 0) >= amount }
-          
-          // Check if the organism has enough capacity to hold the gained resources
-          val canHold = gainedResources forall { case (resource, amount) => resourceCapacities.getOrElse(resource, Int.MaxValue) >= currentResourceAmounts.getOrElse(resource, 0) + amount }
-          
-          if (canSpend && canHold) {
-            Seq(
-            SpendResources(
-            targetId = this.id, 
-            resources = spentResources,
-            resultingEvents = gainedResources.map { case (resource, amount) => ResourceGain(this.id, resource, amount) }.toSeq
-            )
-            )
+    frequency = 1000,
+    eventGenerator = (time) => {
+      synthesisRate.toSeq.flatMap { 
+        case (conv: Conversion, maxAmount) => {
+          val currentResourceAmounts = resources
+          val gainedAmount = conv.inputs.map { case (resource, quantity) => (currentResourceAmounts.getOrElse(resource, 0) - 1) / quantity }.min
+          val amount = gainedAmount min maxAmount
+          if (amount > 0) {
+            val spentResources = conv.inputs.map { case (resource, quantity) => resource -> quantity * amount }
+            val gainedResources = conv.outputs.map { case (resource, quantity) => resource -> quantity * amount }
+            
+            // Check if the organism has enough resources to spend
+            val canSpend = spentResources forall { case (resource, amount) => currentResourceAmounts.getOrElse(resource, 0) >= amount }
+            
+            // Check if the organism has enough capacity to hold the gained resources
+            val canHold = gainedResources forall { case (resource, amount) => resourceCapacities.getOrElse(resource, Int.MaxValue) >= currentResourceAmounts.getOrElse(resource, 0) + amount }
+            
+            // Check if the organism meets the survival requirements after synthesizing
+            val meetsSurvivalRequirements = survivalRequirements forall { case (resource, requiredAmount) => currentResourceAmounts.getOrElse(resource, 0) - spentResources.getOrElse(resource, 0) >= requiredAmount }
+            
+            if (canSpend && canHold && meetsSurvivalRequirements) {
+              Seq(
+                SpendResources(
+                  targetId = this.id, 
+                  resources = spentResources,
+                  resultingEvents = gainedResources.map { case (resource, amount) => ResourceGain(this.id, resource, amount) }.toSeq
+                )
+              )
+            } else {
+              Seq()
+            }
           } else {
             Seq()
           }
-        } else {
-          Seq()
         }
       }
     }
-  }
   )
   
   def eventEmitters: Seq[EventEmitter] = Seq(
-  waterLossEmitter,
+  // waterLossEmitter,
   synthesize,
   collect,
   findTarget,
   )
   
-  def eventHandlers: PartialFunction[Event, Seq[Event]] = {
-    case ResourceLost(_, resource: Resource, amount) => {
-      val cur = resources.getOrElse(resource, 0)
-      resources.update(resource, cur - (cur min amount))
-      if(resources.getOrElse(resource, 0) <= 0) {
+  def eventHandlers: PartialFunction[Event, Seq[Event]] = resourceContainerEventHandlers orElse {
+    case ResourceDrained(_, resource) => {
+      if (survivalRequirements.contains(resource) && resources.getOrElse(resource, 0) < survivalRequirements(resource)) {
         println(s"$id ${this.getClass.getSimpleName} Died due to lack of ${resource.name}")
-        Perished(this)
-      } else{
+        val resourcesToReturn = resources.filter {
+          case (resource, _) => resource == Water || resource == Nutrient
+        }.toMap
+        resources --= resourcesToReturn.keySet // Remove the resources from the organism
+        Seq(
+        Perished(this),
+        ReturnResourcesToEnvironment(resourcesToReturn)
+        )
+      } else {
         Seq()
-      } :+ UpdateOrganismDisplay(this)
-    }
-    case ResourceGain(_, resource: Resource, amount) => {
-      val cur = resources.getOrElse(resource, 0)
-      resources.update(resource, cur + amount)
-      Seq(UpdateOrganismDisplay(this))
-    }
-    case ExtractResource(_, resource: Resource, amount, sender) => {
-      val deliverable = resources.getOrElse(resource,0) min amount
-      Seq(
-      ResourceLost(targetId = this.id, resource = resource, amount = deliverable),
-      ResourceGain(targetId = sender.id, resource = resource, amount = deliverable),
-      )
+      }
     }
     case SpendResources(targetId, requiredResources: Map[Resource, Int], resultingEvents) => {
       val (sufficient, insufficient) = requiredResources.partition { case (resource, amount) => resources.getOrElse(resource, 0) >= amount }
@@ -176,19 +175,28 @@ trait Organism extends Entity {
       }
       case _ => Seq()
     }
-    case Reproduce(_, dnaEntry) => {
+    case Reproduce(_, dnaMutation) => {
       val newResources = resources.map { case (resource, amount) => resource -> amount / 2 }.toMap
-      val newDna = dna.withModifiedProperty(dnaEntry)
+      val newDna = dna.withMutation(dnaMutation)
       val newOrganism = () => this match {
-        case plant: Plant => Plant(newDna, newResources)
-        case animal: Animal => Animal(newDna, newResources)
-        case fungi: Fungi => Fungi(newDna, newResources)
+        case plant: Plant => Plant(newDna)
+        case animal: Animal => Animal(newDna)
+        case fungi: Fungi => Fungi(newDna)
       }
-      newResources.foreach { case (resource, amount) => resources.update(resource, resources(resource) - amount) }
-      Seq(
-      UpdateOrganismDisplay(this),
-      CreateOrganism(newOrganism),
-      )
+      
+      // Check if the organism has enough resources to meet its survival requirements after reproducing
+      val meetsSurvivalRequirements = dna.survivalRequirements forall { case (resource, requiredAmount) => newResources.getOrElse(resource, 0) >= requiredAmount }
+      
+      if (meetsSurvivalRequirements) {
+        newResources.foreach { case (resource, amount) => resources.update(resource, resources(resource) - amount) }
+        Seq(
+          UpdateOrganismDisplay(this),
+          CreateOrganism(newOrganism),
+        )
+      } else {
+        // If the organism doesn't have enough resources to meet its survival requirements, don't reproduce
+        Seq()
+      }
     }
   }
   

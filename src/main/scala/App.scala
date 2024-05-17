@@ -18,8 +18,9 @@ import model.GameState
 import model.entities.{Entity, Entities, GameStateManager, Organism}
 import model.entities.organisms.{Plant, Animal, Fungi}
 import model.dna.{DNAEntry}
-import model.events.{Event, UpdateOrganismDisplay, UpdateEnviornmentDisplay}
+import model.events.{Event, UpdateOrganismDisplay, UpdateEnviornmentDisplay, Perished}
 import model.resources.{Water, Nutrient, Sunlight}
+import view.OrganismSelectionWindow
 
 
 object SimpleApp extends JFXApp3 {
@@ -27,15 +28,10 @@ object SimpleApp extends JFXApp3 {
   
   override def start(): Unit = {
 
-    val organismList = ObservableBuffer[Organism]()
-    val organismView = new ListView[Organism](organismList)
-    gameState.addEntity(OrganismDisplay(organismList, organismView))
+    gameState.addEntity(OrganismDisplay)
+    gameState.addEntity(DNADisplay)
 
-    val actionList = ObservableBuffer[DNAEntry]()
-    val actionView = new ListView[DNAEntry](actionList)
-    gameState.addEntity(DNADisplay(actionList, actionView))
-
-    val environment = Environment
+    val environment = Environment()
     gameState.addEntity(environment)
 
     val organismsHBox = new HBox(10) {
@@ -43,19 +39,20 @@ object SimpleApp extends JFXApp3 {
         new VBox(10) {
           children = Seq(
             Text("Organisms"),
-            organismView
+            OrganismDisplay.getView
           )
           hgrow = Priority.Always
         },
         new VBox(10) {
           children = Seq(
             Text("Organism DNA"),
-            actionView
+            DNADisplay.getView
           )
           hgrow = Priority.Always
         }
       )
     }
+    gameState.addEntity(OrganismSelectionWindow)
     
     val firstAnimal = new Animal()
     gameState.addEntity(firstAnimal)
@@ -69,33 +66,29 @@ object SimpleApp extends JFXApp3 {
     gameState.addEntity(firstPlant)
     gameState.getEntity(Entities.organismDisplay).events.enqueue(UpdateOrganismDisplay(firstPlant))
     
-    val organismOptions = ObservableBuffer[String]("Plant", "Animal", "Fungi")
-    val createOrganismButton = new Button("Create Organism")
-    gameState.addEntity(CreateOrganismButton(createOrganismButton))
-
-    val pauseButton = new Button("Pause")
-    gameState.addEntity(PauseButton(pauseButton))
-
-    val playButton = new Button("Play")
-    gameState.addEntity(PlayButton(playButton))
+    gameState.addEntity(CreateOrganismButton)
+    gameState.addEntity(PauseButton)
+    gameState.addEntity(PlayButton)
     
     val gameStateManager = GameStateManager(gameState)
     gameState.addEntity(gameStateManager)
 
-    val environmentData = ObservableBuffer[String]()
-    val environmentList = ListView[String](environmentData)
-    gameState.addEntity(EnvironmentDisplay(environmentData, environmentList))
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(Water, environment.resources(Water)))
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(Nutrient, environment.resources(Nutrient)))
-    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(Sunlight, environment.resources(Sunlight)))
+    val perishedAnimal = new Animal()
+    gameState.addEntity(perishedAnimal)
+    gameState.getEntity(Entities.gameStateManager).events.enqueue(Perished(perishedAnimal))
+
+
+    gameState.addEntity(EnvironmentDisplay)
+    gameState.getEntity(Entities.environmentDisplay).events.enqueue(UpdateEnviornmentDisplay(environment))
+
     val vbox = new VBox(10) {
       children = Seq(
         Text("Environment"), 
-        environmentList, 
+        EnvironmentDisplay.getView, 
         organismsHBox,
-        createOrganismButton,
-        pauseButton,
-        playButton,
+        CreateOrganismButton.getButton,
+        PauseButton.getButton,
+        PlayButton.getButton,
       )
     }
     
